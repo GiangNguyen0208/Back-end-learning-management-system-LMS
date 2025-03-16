@@ -32,4 +32,9 @@ public class UserController {
     public ResponseEntity<CommonApiResponse> confirm(@RequestParam("token") String token) {
         return userResource.confirmToken(token);
     }
+
+    @GetMapping(path = "/resend-confirmation")
+    public ResponseEntity<CommonApiResponse> resendConfirm(@RequestParam("token") String email) {
+        return userResource.resendConfirmToken(email);
+    }
 }

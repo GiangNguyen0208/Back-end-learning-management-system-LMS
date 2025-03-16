@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RegisterUserRequestDTO {
-
     private String username;
 
     private String firstName;

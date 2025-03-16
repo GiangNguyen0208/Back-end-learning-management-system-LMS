@@ -9,6 +9,7 @@ import org.springframework.beans.BeanUtils;
 @Data
 public class UserDTO {
     private int id;
+    private String firebaseUid;
 
     private String firstName;
 

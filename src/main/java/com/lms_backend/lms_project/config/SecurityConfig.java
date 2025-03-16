@@ -43,7 +43,7 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable()).cors(cors -> cors.disable())
 
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/user/login", "/api/user/register").permitAll()
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/user/login", "/api/user/register", "/api/user/confirm", "api/user/resend-confirmation").permitAll()
 
 //						// this APIs are only accessible by ADMIN
                         .requestMatchers("/api/user/admin/register", "/api/user/delete/seller", "/api/order/fetch/all",

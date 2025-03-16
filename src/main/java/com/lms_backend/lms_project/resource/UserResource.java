@@ -95,7 +95,6 @@ public class UserResource {
         if (!user.getStatus().equals(Constant.ActiveStatus.ACTIVE.value())) {
             response.setResponseMessage("User is not active");
             response.setSuccess(false);
-
             return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
         }
 
@@ -107,6 +106,7 @@ public class UserResource {
             response.setResponseMessage("Logged in sucessful");
             response.setSuccess(true);
             response.setJwtToken(jwtToken);
+            user.setFirebaseUid(response.getUser().getFirebaseUid());
             return new ResponseEntity<UserLoginResponse>(response, HttpStatus.OK);
         }
 
@@ -178,10 +178,10 @@ public class UserResource {
         User userActive = userService.addUser(user);
 
         String token = userService.generateToken(user);
-        String link = "http://localhost:8080/api/v1/registration/confirm?token=" + token;
+        String frontendUrl = "http://localhost:5173/verify-email?token=" + token;
         emailService.send(
                 user.getEmailId(),
-                buildEmail(user.getUsername(), link));
+                buildEmail(user.getUsername(), frontendUrl));
 
         if (userActive == null) {
             throw new UserSaveFailedException("Registration Failed because of Technical issue:(");
@@ -233,5 +233,27 @@ public class UserResource {
         response.setSuccess(true);
 
         return new ResponseEntity<CommonApiResponse>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<CommonApiResponse> resendConfirmToken(String email) {
+        LOG.info("Resending confirmation email for: " + email);
+
+        CommonApiResponse response = new CommonApiResponse();
+        User user = userService.getUserByEmailAndStatus(email, Constant.ActiveStatus.DEACTIVATED.value());
+
+        if (user == null) {
+            response.setResponseMessage("Email không tồn tại hoặc đã được xác nhận.");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        String token = userService.generateToken(user);
+        String frontendUrl = "http://localhost:5173/verify-email?token=" + token;
+
+        emailService.send(user.getEmailId(), buildEmail(user.getUsername(), frontendUrl));
+
+        response.setResponseMessage("Email xác nhận đã được gửi lại.");
+        response.setSuccess(true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
