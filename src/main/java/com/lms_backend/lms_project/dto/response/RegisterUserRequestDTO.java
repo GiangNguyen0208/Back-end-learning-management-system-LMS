@@ -1,4 +1,4 @@
-package com.lms_backend.lms_project.dto;
+package com.lms_backend.lms_project.dto.response;
 
 import com.lms_backend.lms_project.entity.User;
 import lombok.AllArgsConstructor;

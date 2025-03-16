@@ -1,8 +1,12 @@
 package com.lms_backend.lms_project.resource;
 
 import com.lms_backend.lms_project.Utility.Constant;
-import com.lms_backend.lms_project.dto.CommonApiResponse;
-import com.lms_backend.lms_project.dto.RegisterUserRequestDTO;
+import com.lms_backend.lms_project.Utility.JwtUtils;
+import com.lms_backend.lms_project.dto.UserDTO;
+import com.lms_backend.lms_project.dto.request.UserLoginRequest;
+import com.lms_backend.lms_project.dto.response.CommonApiResponse;
+import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
+import com.lms_backend.lms_project.dto.response.UserLoginResponse;
 import com.lms_backend.lms_project.entity.ConfirmationToken;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.exception.UserSaveFailedException;
@@ -15,12 +19,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 @Transactional
@@ -38,6 +47,76 @@ public class UserResource {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
+    public ResponseEntity<UserLoginResponse> login(UserLoginRequest loginRequest) {
+
+        LOG.info("Received request for User Login");
+
+        UserLoginResponse response = new UserLoginResponse();
+
+        if (loginRequest == null) {
+            response.setResponseMessage("Missing Input");
+            response.setSuccess(false);
+
+            return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        String jwtToken = null;
+        User user = null;
+
+        user = this.userService.getUserByEmailid(loginRequest.getEmailId());
+
+        if (user == null) {
+            response.setResponseMessage("User with this Email Id not registered in System!!!");
+            response.setSuccess(false);
+
+            return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        List<GrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority(user.getRole()));
+
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmailId(),
+                    loginRequest.getPassword(), authorities));
+        } catch (Exception ex) {
+            response.setResponseMessage("Invalid email or password.");
+            response.setSuccess(false);
+            return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        jwtToken = jwtUtils.generateToken(loginRequest.getEmailId());
+
+        if (!user.getStatus().equals(Constant.ActiveStatus.ACTIVE.value())) {
+            response.setResponseMessage("User is not active");
+            response.setSuccess(false);
+
+            return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        UserDTO userDTO = UserDTO.toUserDtoEntity(user);
+
+        // user is authenticated
+        if (jwtToken != null) {
+            response.setUser(userDTO);
+            response.setResponseMessage("Logged in sucessful");
+            response.setSuccess(true);
+            response.setJwtToken(jwtToken);
+            return new ResponseEntity<UserLoginResponse>(response, HttpStatus.OK);
+        }
+
+        else {
+            response.setResponseMessage("Failed to login");
+            response.setSuccess(false);
+            return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+    }
 
     public ResponseEntity<CommonApiResponse> registerUser(RegisterUserRequestDTO request) {
 

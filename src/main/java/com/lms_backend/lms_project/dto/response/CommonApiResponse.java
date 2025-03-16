@@ -1,4 +1,4 @@
-package com.lms_backend.lms_project.dto;
+package com.lms_backend.lms_project.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
