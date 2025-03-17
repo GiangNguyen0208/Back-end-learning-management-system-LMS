@@ -1,5 +1,6 @@
 package com.lms_backend.lms_project.controller;
 
+import com.lms_backend.lms_project.dto.request.AddMentorDetailRequestDto;
 import com.lms_backend.lms_project.dto.request.UserLoginRequest;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
@@ -27,6 +28,13 @@ public class UserController {
     public ResponseEntity<CommonApiResponse> register(@RequestBody RegisterUserRequestDTO request){
         return userResource.registerUser(request);
     }
+
+    @PutMapping("mentor/detail/update")
+    @Operation(summary = "Api to update the mentor detail")
+    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto request) {
+        return this.userResource.addMentorDetail(request);
+    }
+
 
     @GetMapping(path = "/confirm")
     public ResponseEntity<CommonApiResponse> confirm(@RequestParam("token") String token) {

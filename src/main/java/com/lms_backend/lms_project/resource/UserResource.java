@@ -3,17 +3,23 @@ package com.lms_backend.lms_project.resource;
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.Utility.JwtUtils;
 import com.lms_backend.lms_project.dto.UserDTO;
+import com.lms_backend.lms_project.dto.request.AddMentorDetailRequestDto;
 import com.lms_backend.lms_project.dto.request.UserLoginRequest;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
 import com.lms_backend.lms_project.dto.response.UserLoginResponse;
 import com.lms_backend.lms_project.entity.ConfirmationToken;
+import com.lms_backend.lms_project.entity.MentorDetail;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.exception.UserSaveFailedException;
 import com.lms_backend.lms_project.service.EmailService;
+import com.lms_backend.lms_project.service.MentorDetailService;
+import com.lms_backend.lms_project.service.StorageService;
 import com.lms_backend.lms_project.service.UserService;
 import com.lms_backend.lms_project.serviceimpl.ConfirmationTokenService;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +56,12 @@ public class UserResource {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private StorageService storageService;
+
+    @Autowired
+    private MentorDetailService mentorDetailService;
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -188,6 +200,53 @@ public class UserResource {
         }
 
         response.setResponseMessage("User registered Successfully");
+        response.setSuccess(true);
+
+        return new ResponseEntity<CommonApiResponse>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto request) {
+        LOG.info("Received request for adding the mentor detail");
+
+        CommonApiResponse response = new CommonApiResponse();
+
+        if (request == null) {
+            response.setResponseMessage("missing request body");
+            response.setSuccess(false);
+
+            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        if (request.getAge() == 0 || request.getBio() == null || request.getHighestQualification() == null
+                || request.getMentorId() == 0 || request.getProfession() == null || request.getProfilePic() == null) {
+            response.setResponseMessage("missing input");
+            response.setSuccess(false);
+
+            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        User mentor = this.userService.getUserById(request.getMentorId());
+
+        if (mentor == null || !mentor.getRole().equals(Constant.UserRole.ROLE_MENTOR.value())) {
+            response.setResponseMessage("mentor not found!!!");
+            response.setSuccess(false);
+
+            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        MentorDetail mentorDetail = AddMentorDetailRequestDto.toEntity(request);
+
+        String profilePicName = this.storageService.store(request.getProfilePic());
+
+        mentorDetail.setProfilePic(profilePicName);
+
+        MentorDetail detail = mentorDetailService.addMentorDetail(mentorDetail);
+
+        mentor.setMentorDetail(detail);
+
+        this.userService.updateUser(mentor);
+
+        response.setResponseMessage("Mentor Profile Updated Successful!!!");
         response.setSuccess(true);
 
         return new ResponseEntity<CommonApiResponse>(response, HttpStatus.OK);
