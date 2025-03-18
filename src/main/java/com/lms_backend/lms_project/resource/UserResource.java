@@ -205,52 +205,51 @@ public class UserResource {
         return new ResponseEntity<CommonApiResponse>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto request) {
+    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto requestAddMentor) {
         LOG.info("Received request for adding the mentor detail");
 
         CommonApiResponse response = new CommonApiResponse();
 
-        if (request == null) {
-            response.setResponseMessage("missing request body");
+        // Kiểm tra request đầu vào
+        if (requestAddMentor == null || requestAddMentor.getMentorId() == 0) {
+            response.setResponseMessage("Missing request body or mentor ID");
             response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
-        if (request.getAge() == 0 || request.getBio() == null || request.getHighestQualification() == null
-                || request.getMentorId() == 0 || request.getProfession() == null || request.getProfilePic() == null) {
-            response.setResponseMessage("missing input");
-            response.setSuccess(false);
+        // Tìm User theo ID
+        User user = userService.getUserById(requestAddMentor.getMentorId());
 
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+        // Kiểm tra user có tồn tại và đã được kích hoạt chưa
+        if (user == null) {
+            response.setResponseMessage("User not found.");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
 
-        User mentor = this.userService.getUserById(request.getMentorId());
-
-        if (mentor == null || !mentor.getRole().equals(Constant.UserRole.ROLE_MENTOR.value())) {
-            response.setResponseMessage("mentor not found!!!");
+        if (!user.getStatus().equals(Constant.ActiveStatus.ACTIVE.value())) {
+            response.setResponseMessage("User is not active. Please verify email first.");
             response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
-        MentorDetail mentorDetail = AddMentorDetailRequestDto.toEntity(request);
+        LOG.info("User found and active. Updating MentorDetail...");
 
-        String profilePicName = this.storageService.store(request.getProfilePic());
+        // Cập nhật thông tin Mentor
+        MentorDetail mentorDetail = AddMentorDetailRequestDto.toEntity(requestAddMentor);
+        mentorDetail.setProfilePic(storageService.store(requestAddMentor.getProfilePic()));
 
-        mentorDetail.setProfilePic(profilePicName);
+        MentorDetail updatedMentorDetail = mentorDetailService.addMentorDetail(mentorDetail);
+        user.setMentorDetail(updatedMentorDetail);
+        user.setRole(Constant.UserRole.ROLE_MENTOR.value());
 
-        MentorDetail detail = mentorDetailService.addMentorDetail(mentorDetail);
+        userService.updateUser(user);
 
-        mentor.setMentorDetail(detail);
-
-        this.userService.updateUser(mentor);
-
-        response.setResponseMessage("Mentor Profile Updated Successful!!!");
+        response.setResponseMessage("Mentor profile updated successfully!");
         response.setSuccess(true);
-
-        return new ResponseEntity<CommonApiResponse>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     private String buildEmail(String username, String link) {
         return "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;\">"

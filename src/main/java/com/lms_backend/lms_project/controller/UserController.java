@@ -29,10 +29,10 @@ public class UserController {
         return userResource.registerUser(request);
     }
 
-    @PutMapping("mentor/detail/update")
+    @PutMapping("/mentor/detail/update")
     @Operation(summary = "Api to update the mentor detail")
-    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto request) {
-        return this.userResource.addMentorDetail(request);
+    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto addMentorDetailRequestDto) {
+        return this.userResource.addMentorDetail(addMentorDetailRequestDto);
     }
 
 
