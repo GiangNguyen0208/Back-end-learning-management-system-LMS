@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.lms_backend.lms_project.dao.CategoryDao;
+import com.lms_backend.lms_project.dto.request.CategoryRequestDto;
 import com.lms_backend.lms_project.entity.Category;
 import com.lms_backend.lms_project.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,5 +46,18 @@ public class CategoryServiceImpl implements CategoryService {
         return this.categoryDao.findByStatusIn(status);
     }
 
+    @Override
+    public boolean existsByName(String name) {
+        return this.categoryDao.existsByName(name);
+    }
+
+    @Override
+    public List<Category> getAllCategoriesDeletedFalse() {
+        return this.categoryDao.findByDeletedFalse();
+    }
+    @Override
+    public List<Category> getAllCategoriesDeletedTrue() {
+        return this.categoryDao.findByDeletedTrue();
+    }
 }
 

@@ -12,8 +12,10 @@ import org.springframework.stereotype.Repository;
 public interface CategoryDao extends JpaRepository<Category, Integer> {
 
     List<Category> findByStatusIn(List<String> status);
-
+    boolean existsByName(String name);
     Long countByStatusIn(List<String> status);
+    List<Category> findByDeletedFalse();
+    List<Category> findByDeletedTrue();
 
 }
 

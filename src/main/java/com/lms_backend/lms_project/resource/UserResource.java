@@ -102,7 +102,7 @@ public class UserResource {
             return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
         }
 
-        jwtToken = jwtUtils.generateToken(loginRequest.getEmailId());
+        jwtToken = jwtUtils.generateToken(loginRequest.getEmailId(), loginRequest.getRole());
 
         if (!user.getStatus().equals(Constant.ActiveStatus.ACTIVE.value())) {
             response.setResponseMessage("User is not active");

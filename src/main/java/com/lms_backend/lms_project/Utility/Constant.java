@@ -16,7 +16,7 @@ public class Constant {
     }
 
     public enum ActiveStatus {
-        ACTIVE("Active"), DEACTIVATED("Deactivated");
+        ACTIVE("Active"), DEACTIVATED("Deactivated"), DELETED("Deleted");
 
         private String status;
 

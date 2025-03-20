@@ -38,6 +38,7 @@ public class LmsProjectApplication implements CommandLineRunner {
 			LOG.info("Admin not found in system, so adding default admin");
 
 			User user = new User();
+			user.setUsername("admin");
 			user.setEmailId("demo.admin@demo.com");
 			user.setPassword(passwordEncoder.encode("admin123"));
 			user.setRole(Constant.UserRole.ROLE_ADMIN.value());
