@@ -126,9 +126,11 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public Resource loadCourseNote(String fileName) {
         File filePath = new File(COURSE_NOTE_BASEPATH, fileName);
-        if (filePath.exists())
-            return new FileSystemResource(filePath);
-        return null;
+        if (!filePath.exists()) {
+            System.err.println("File not found: " + filePath.getAbsolutePath());
+            return null;
+        }
+        return new FileSystemResource(filePath);
     }
 
     @Override

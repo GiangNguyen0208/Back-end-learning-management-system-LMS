@@ -7,6 +7,7 @@ import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
 import com.lms_backend.lms_project.dto.response.UserLoginResponse;
 import com.lms_backend.lms_project.resource.UserResource;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,4 +46,10 @@ public class UserController {
     public ResponseEntity<CommonApiResponse> resendConfirm(@RequestParam("token") String email) {
         return userResource.resendConfirmToken(email);
     }
+
+    @GetMapping(value = "/{userImageName}", produces = "image/*")
+    public void fetchTourImage(@PathVariable("userImageName") String userImageName, HttpServletResponse resp) {
+        this.userResource.fetchUserImage(userImageName, resp);
+    }
+
 }

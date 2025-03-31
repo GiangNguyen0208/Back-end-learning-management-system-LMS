@@ -4,14 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -48,14 +41,20 @@ public class Course {
 
     private int discountInPercent;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String authorCourseNote;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String specialNote;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String prerequisite;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CourseSection> sections = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Collaborator> collabrators = new ArrayList<>();
 
 }
 

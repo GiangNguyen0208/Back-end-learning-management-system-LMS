@@ -21,11 +21,17 @@ public class AddMentorDetailRequestDto {
 
     private MultipartFile profilePic;
 
+    private String languageCertificate;
+
+    private String degreeLevel;
+
+    private MultipartFile selectedCertificate;
+
     private int mentorId;
 
     public static MentorDetail toEntity(AddMentorDetailRequestDto addMentorDetailRequestDto) {
         MentorDetail mentorDetail = new MentorDetail();
-        BeanUtils.copyProperties(addMentorDetailRequestDto, mentorDetail, "profilePic", "mentorId", "id");
+        BeanUtils.copyProperties(addMentorDetailRequestDto, mentorDetail, "profilePic", "mentorId", "id", "selectedCertificate");
         return mentorDetail;
     }
 }
