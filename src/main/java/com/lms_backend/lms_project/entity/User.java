@@ -60,4 +60,20 @@ public class User {
 
     private String status;
 
+    // Thêm vào class User
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Rating> ratings = new ArrayList<>();
+
+    // Thêm phương thức helper
+    public void addRating(Rating rating) {
+        ratings.add(rating);
+        rating.setUser(this);
+    }
+
+    public void removeRating(Rating rating) {
+        ratings.remove(rating);
+        rating.setUser(null);
+    }
+
 }

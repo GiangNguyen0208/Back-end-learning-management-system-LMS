@@ -1,6 +1,9 @@
 package com.lms_backend.lms_project.resource;
 
 import com.lms_backend.lms_project.Utility.Constant;
+import com.lms_backend.lms_project.dto.CourseDTO;
+import com.lms_backend.lms_project.dto.CourseSectionDTO;
+import com.lms_backend.lms_project.dto.CourseSectionTopicDTO;
 import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
@@ -24,7 +27,9 @@ import java.io.InputStream;
 import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -371,57 +376,172 @@ public class CourseResource {
     }
 
     public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(String status, String videoShow) {
-
-        LOG.info("received request for fetching the courses by status");
+        LOG.info("Received request for fetching courses by status: {}", status);
 
         CourseResponseDto response = new CourseResponseDto();
 
+        // Validate input
         if (status == null || videoShow == null) {
-            response.setResponseMessage("missing input");
+            response.setResponseMessage("Missing required parameters: status and videoShow");
             response.setSuccess(false);
-
-            return new ResponseEntity<CourseResponseDto>(response, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        List<Course> courses = this.courseService.getByStatus(status);
+        try {
+            // Fetch courses with status
+            List<Course> courses = courseService.getByStatus(status);
 
-        if (CollectionUtils.isEmpty(courses)) {
-            response.setResponseMessage("Courses not found!!!");
-            response.setSuccess(false);
-
-            return new ResponseEntity<CourseResponseDto>(response, HttpStatus.OK);
-        }
-
-        if (videoShow.equals(Constant.CourseTopicVideoShow.NO.value())) {
-
-            for (Course course : courses) {
-                List<CourseSection> sections = course.getSections();
-                if (!CollectionUtils.isEmpty(sections)) {
-
-                    for (CourseSection section : sections) {
-
-                        List<CourseSectionTopic> topics = section.getCourseSectionTopics();
-
-                        if (!CollectionUtils.isEmpty(topics)) {
-
-                            for (CourseSectionTopic topic : topics) {
-                                topic.setVideoFileName("");
-                            }
-
-                        }
-
-                    }
-
-                }
+            if (CollectionUtils.isEmpty(courses)) {
+                response.setResponseMessage("No courses found with status: " + status);
+                response.setSuccess(true); // Coi đây không phải là lỗi
+                return ResponseEntity.ok().body(response);
             }
 
+            // Convert to DTOs
+            List<CourseDTO> courseDTOs = courses.stream()
+                    .map(course -> convertToCourseDTO(course, videoShow))
+                    .collect(Collectors.toList());
+
+            // Build response
+            response.setCourseDTOs(courseDTOs);
+            response.setResponseMessage("Successfully fetched " + courseDTOs.size() + " courses");
+            response.setSuccess(true);
+
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            LOG.error("Error fetching courses by status", e);
+            response.setResponseMessage("Internal server error");
+            response.setSuccess(false);
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    private CourseDTO convertToCourseDTO(Course course, String videoShow) {
+        CourseDTO.CourseDTOBuilder builder = CourseDTO.builder()
+                .id(course.getId())
+                .name(course.getName())
+                .description(course.getDescription())
+                .type(course.getType())
+                .fee(course.getFee())
+                .addedDateTime(course.getAddedDateTime())
+                .notesFileName(course.getNotesFileName())
+                .thumbnail(course.getThumbnail())
+                .status(course.getStatus())
+                .discountInPercent(course.getDiscountInPercent())
+                .authorCourseNote(course.getAuthorCourseNote())
+                .specialNote(course.getSpecialNote())
+                .prerequisite(course.getPrerequisite())
+                .averageRating(course.getAverageRating());
+
+        // Set mentor info
+        if (course.getMentor() != null) {
+            builder.mentorId(course.getMentor().getId())
+                    .mentorName(course.getMentor().getFirstName() + " " + course.getMentor().getLastName());
         }
 
-        response.setCourses(courses);
-        response.setResponseMessage("Courses Fetched Successful!!!");
-        response.setSuccess(true);
+        // Set category info
+        if (course.getCategory() != null) {
+            builder.categoryId(course.getCategory().getId())
+                    .categoryName(course.getCategory().getName());
+        }
 
-        return new ResponseEntity<CourseResponseDto>(response, HttpStatus.OK);
+        // Process sections and topics if they are loaded
+        if (course.getSections() != null && !course.getSections().isEmpty()) {
+            List<CourseSectionDTO> sectionDTOs = course.getSections().stream()
+                    .sorted(Comparator.comparing(CourseSection::getSrNo))
+                    .map(section -> convertToSectionDTO(section, videoShow))
+                    .collect(Collectors.toList());
+            builder.sections(sectionDTOs);
+        }
 
+        return builder.build();
     }
+
+    private CourseSectionDTO convertToSectionDTO(CourseSection section, String videoShow) {
+        CourseSectionDTO.CourseSectionDTOBuilder builder = CourseSectionDTO.builder()
+                .id(section.getId())
+                .srNo(section.getSrNo())
+                .name(section.getName())
+                .description(section.getDescription());
+
+        // Process topics if they are loaded
+        if (section.getCourseSectionTopics() != null && !section.getCourseSectionTopics().isEmpty()) {
+            List<CourseSectionTopicDTO> topicDTOs = section.getCourseSectionTopics().stream()
+                    .sorted(Comparator.comparing(CourseSectionTopic::getSrNo))
+                    .map(topic -> convertToTopicDTO(topic, videoShow))
+                    .collect(Collectors.toList());
+            builder.topics(topicDTOs);
+        }
+
+        return builder.build();
+    }
+
+    private CourseSectionTopicDTO convertToTopicDTO(CourseSectionTopic topic, String videoShow) {
+        return CourseSectionTopicDTO.builder()
+                .id(topic.getId())
+                .srNo(topic.getSrNo())
+                .name(topic.getName())
+                .description(topic.getDescription())
+                .videoFileName(shouldShowVideo(videoShow) ? topic.getVideoFileName() : "")
+                .build();
+    }
+
+    private boolean shouldShowVideo(String videoShow) {
+        return Constant.CourseTopicVideoShow.YES.value().equals(videoShow);
+    }
+
+//    public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(String status, String videoShow) {
+//
+//        LOG.info("received request for fetching the courses by status");
+//
+//        CourseResponseDto response = new CourseResponseDto();
+//
+//        if (status == null || videoShow == null) {
+//            response.setResponseMessage("missing input");
+//            response.setSuccess(false);
+//
+//            return new ResponseEntity<CourseResponseDto>(response, HttpStatus.BAD_REQUEST);
+//        }
+//
+//        List<Course> courses = this.courseService.getByStatus(status);
+//
+//        if (CollectionUtils.isEmpty(courses)) {
+//            response.setResponseMessage("Courses not found!!!");
+//            response.setSuccess(false);
+//
+//            return new ResponseEntity<CourseResponseDto>(response, HttpStatus.OK);
+//        }
+//
+//        if (videoShow.equals(Constant.CourseTopicVideoShow.NO.value())) {
+//
+//            for (Course course : courses) {
+//                List<CourseSection> sections = course.getSections();
+//                if (!CollectionUtils.isEmpty(sections)) {
+//
+//                    for (CourseSection section : sections) {
+//
+//                        List<CourseSectionTopic> topics = section.getCourseSectionTopics();
+//
+//                        if (!CollectionUtils.isEmpty(topics)) {
+//
+//                            for (CourseSectionTopic topic : topics) {
+//                                topic.setVideoFileName("");
+//                            }
+//
+//                        }
+//
+//                    }
+//
+//                }
+//            }
+//
+//        }
+//
+//        response.setCourses(courses);
+//        response.setResponseMessage("Courses Fetched Successful!!!");
+//        response.setSuccess(true);
+//
+//        return new ResponseEntity<CourseResponseDto>(response, HttpStatus.OK);
+//
+//    }
 }
