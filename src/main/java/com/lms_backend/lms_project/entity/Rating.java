@@ -28,7 +28,7 @@ public class Rating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private int id;
 
     @Min(1) @Max(5)
     @Column(nullable = false)
