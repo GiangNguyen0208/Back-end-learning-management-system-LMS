@@ -2,8 +2,9 @@ package com.lms_backend.lms_project.entity;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,11 +14,10 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(
         name = "course_ratings",
-        uniqueConstraints = @UniqueConstraint(
-                columnNames = {"user_id", "course_id"}
-        ),
         indexes = {
                 @Index(columnList = "course_id"),
                 @Index(columnList = "user_id"),
@@ -25,14 +25,14 @@ import java.time.LocalDateTime;
         }
 )
 public class Rating {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Min(1) @Max(5)
     @Column(nullable = false)
-    private Integer rating;
+    @DecimalMin("0.5") @DecimalMax("5.0")
+    @Digits(integer=1, fraction=1)
+    private Double rating;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
@@ -49,7 +49,7 @@ public class Rating {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    public Rating(Integer rating, String comment, User user, Course course) {
+    public Rating(Double rating, String comment, User user, Course course) {
         this.rating = rating;
         this.comment = comment;
         this.user = user;

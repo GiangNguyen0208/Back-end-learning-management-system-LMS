@@ -4,11 +4,17 @@ package com.lms_backend.lms_project.controller;
 import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
+import com.lms_backend.lms_project.dto.request.RatingRequest;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
+import com.lms_backend.lms_project.dto.response.RatingListResponse;
+import com.lms_backend.lms_project.dto.response.RatingResponse;
 import com.lms_backend.lms_project.resource.CourseResource;
+import com.lms_backend.lms_project.service.RatingService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +25,9 @@ import org.springframework.web.bind.annotation.*;
 public class CourseController {
     @Autowired
     private CourseResource courseResource;
+
+    @Autowired
+    RatingService ratingService;
 
     @PostMapping("add")
     @Operation(summary = "Api to add the Mentor Course")
@@ -61,5 +70,18 @@ public class CourseController {
     public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(@RequestParam("status") String status,
                                                                   @RequestParam("videoShow") String videoShow) {
         return courseResource.fetchCoursesByStatus(status, videoShow);
+    }
+
+    @GetMapping("/ratings/{courseId}")
+    public ResponseEntity<RatingListResponse> getRatingsByCourse(
+            @PathVariable int courseId) {
+        return ResponseEntity.ok(ratingService.fetchRatingsByCourse(courseId));
+    }
+
+    @PostMapping("/rating/add")
+    public ResponseEntity<RatingResponse> addRating(
+            @Valid @RequestBody RatingRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ratingService.addRating(request));
     }
 }

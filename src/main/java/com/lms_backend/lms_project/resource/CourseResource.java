@@ -8,6 +8,7 @@ import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
+import com.lms_backend.lms_project.dto.response.RatingResponse;
 import com.lms_backend.lms_project.entity.*;
 import com.lms_backend.lms_project.service.*;
 import jakarta.servlet.ServletOutputStream;

@@ -48,6 +48,8 @@ public class User {
 
     private String role;
 
+    private String avatar;
+
     @OneToOne
     @JoinColumn(name = "address_id")
     private Address address;

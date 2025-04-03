@@ -6,6 +6,7 @@ import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
 import com.lms_backend.lms_project.dto.response.UserLoginResponse;
 import com.lms_backend.lms_project.resource.UserResource;
+import com.lms_backend.lms_project.service.RatingService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
