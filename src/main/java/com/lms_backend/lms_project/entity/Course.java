@@ -26,6 +26,7 @@ public class Course {
 
     private String name;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     private String type; // free, paid

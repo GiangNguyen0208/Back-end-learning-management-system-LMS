@@ -2,6 +2,7 @@ package com.lms_backend.lms_project.resource;
 
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.Utility.JwtUtils;
+import com.lms_backend.lms_project.dao.UserDAO;
 import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.AddMentorDetailRequestDto;
 import com.lms_backend.lms_project.dto.request.UserLoginRequest;
@@ -35,6 +36,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +49,9 @@ import java.util.List;
 @Transactional
 public class UserResource {
     private final Logger LOG = LoggerFactory.getLogger(UserResource.class);
+
+    @Autowired
+    private UserDAO userDAO;
 
     @Autowired
     private UserService userService;
@@ -333,4 +338,32 @@ public class UserResource {
             }
         }
     }
+
+    public void updateUserAvatar(int userId, MultipartFile avatarFile) {
+        LOG.info("Check file avatar: " + avatarFile);
+        if (avatarFile == null || avatarFile.isEmpty()) {
+            throw new IllegalArgumentException("Avatar file must not be empty");
+        }
+
+        User user = userDAO.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Kiểm tra loại file (tùy chọn)
+        if (!avatarFile.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("Only image files are allowed.");
+        }
+
+        // Xóa file cũ nếu tồn tại
+        if (user.getAvatar() != null && !user.getAvatar().isBlank()) {
+            storageService.delete(user.getAvatar());
+        }
+
+        // Lưu file mới
+        String savedFileName = storageService.store(avatarFile);
+
+        // Cập nhật user
+        user.setAvatar(savedFileName);
+        userDAO.save(user);
+    }
+
 }
