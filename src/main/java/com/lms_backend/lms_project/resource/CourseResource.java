@@ -491,6 +491,26 @@ public class CourseResource {
         return Constant.CourseTopicVideoShow.YES.value().equals(videoShow);
     }
 
+    public void fetchCourseTopicVideo(String courseSectionTopicVideoFileName, HttpServletResponse resp) {
+        Resource resource = storageService.loadCourseVideo(courseSectionTopicVideoFileName);
+        if (resource != null && resource.exists()) {
+            try (InputStream in = resource.getInputStream(); ServletOutputStream out = resp.getOutputStream()) {
+                resp.setContentType("video/mp4");
+                FileCopyUtils.copy(in, out);
+                out.flush();
+            } catch (IOException e) {
+
+                LOG.info("Video Player closed or any netwrok issue!!!");
+
+                e.printStackTrace();
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+            }
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
 //    public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(String status, String videoShow) {
 //
 //        LOG.info("received request for fetching the courses by status");

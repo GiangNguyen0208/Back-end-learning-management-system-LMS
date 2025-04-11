@@ -56,10 +56,10 @@ public class UserController {
         this.userResource.fetchUserImage(userImageName, resp);
     }
 
-    @GetMapping(value = "/{userImgAvartar}", produces = "image/*")
-    public void fetchTourAvatar(@PathVariable("userImgAvartar") String userImgAvartar, HttpServletResponse resp) {
-        this.userResource.fetchUserImage(userImgAvartar, resp);
-    }
+//    @GetMapping(value = "/{userImgAvartar}", produces = "image/*")
+//    public void fetchTourAvatar(@PathVariable("userImgAvartar") String userImgAvartar, HttpServletResponse resp) {
+//        this.userResource.fetchUserImage(userImgAvartar, resp);
+//    }
 
     @PostMapping("/{id}/upload-avatar")
     public ResponseEntity<CommonApiResponse> uploadAvatar(

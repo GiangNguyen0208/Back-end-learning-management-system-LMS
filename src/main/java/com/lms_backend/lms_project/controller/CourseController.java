@@ -1,6 +1,7 @@
 package com.lms_backend.lms_project.controller;
 
 
+import com.lms_backend.lms_project.dto.VideoProgressDTO;
 import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
@@ -10,6 +11,7 @@ import com.lms_backend.lms_project.dto.response.RatingListResponse;
 import com.lms_backend.lms_project.dto.response.RatingResponse;
 import com.lms_backend.lms_project.resource.CourseResource;
 import com.lms_backend.lms_project.service.RatingService;
+import com.lms_backend.lms_project.service.VideoProgressService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -23,8 +25,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/course")
 @CrossOrigin(origins = "http://localhost:5173")
 public class CourseController {
+
     @Autowired
     private CourseResource courseResource;
+
+    @Autowired
+    VideoProgressService videoProgressService;
 
     @Autowired
     RatingService ratingService;
@@ -83,5 +89,19 @@ public class CourseController {
             @Valid @RequestBody RatingRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ratingService.addRating(request));
+    }
+
+    @GetMapping(value = "/video/{courseSectionTopicVideoFileName}", produces = "video/*")
+    public void fetchCourseTopicVideo(
+            @PathVariable("courseSectionTopicVideoFileName") String courseSectionTopicVideoFileName,
+            HttpServletResponse resp) {
+        this.courseResource.fetchCourseTopicVideo(courseSectionTopicVideoFileName, resp);
+    }
+
+    @PostMapping("/video/progress")
+    public ResponseEntity<?> updateProgress(@RequestBody VideoProgressDTO dto) {
+        // dto: { userId, videoId, percent }
+        videoProgressService.saveOrUpdate(dto);
+        return ResponseEntity.ok().build();
     }
 }
