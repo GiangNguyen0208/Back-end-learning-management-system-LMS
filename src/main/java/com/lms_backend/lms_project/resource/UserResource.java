@@ -2,6 +2,7 @@ package com.lms_backend.lms_project.resource;
 
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.Utility.JwtUtils;
+import com.lms_backend.lms_project.dao.UserDAO;
 import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.AddMentorDetailRequestDto;
 import com.lms_backend.lms_project.dto.request.UserLoginRequest;
@@ -17,12 +18,15 @@ import com.lms_backend.lms_project.service.MentorDetailService;
 import com.lms_backend.lms_project.service.StorageService;
 import com.lms_backend.lms_project.service.UserService;
 import com.lms_backend.lms_project.serviceimpl.ConfirmationTokenService;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,7 +35,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -41,6 +49,9 @@ import java.util.List;
 @Transactional
 public class UserResource {
     private final Logger LOG = LoggerFactory.getLogger(UserResource.class);
+
+    @Autowired
+    private UserDAO userDAO;
 
     @Autowired
     private UserService userService;
@@ -102,7 +113,7 @@ public class UserResource {
             return new ResponseEntity<UserLoginResponse>(response, HttpStatus.BAD_REQUEST);
         }
 
-        jwtToken = jwtUtils.generateToken(loginRequest.getEmailId(), loginRequest.getRole());
+        jwtToken = jwtUtils.generateToken(loginRequest.getEmailId());
 
         if (!user.getStatus().equals(Constant.ActiveStatus.ACTIVE.value())) {
             response.setResponseMessage("User is not active");
@@ -205,20 +216,20 @@ public class UserResource {
         return new ResponseEntity<CommonApiResponse>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto requestAddMentor) {
+    public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto request) {
         LOG.info("Received request for adding the mentor detail");
 
         CommonApiResponse response = new CommonApiResponse();
 
         // Kiểm tra request đầu vào
-        if (requestAddMentor == null || requestAddMentor.getMentorId() == 0) {
+        if (request == null || request.getMentorId() == 0) {
             response.setResponseMessage("Missing request body or mentor ID");
             response.setSuccess(false);
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
         // Tìm User theo ID
-        User user = userService.getUserById(requestAddMentor.getMentorId());
+        User user = userService.getUserById(request.getMentorId());
 
         // Kiểm tra user có tồn tại và đã được kích hoạt chưa
         if (user == null) {
@@ -236,8 +247,9 @@ public class UserResource {
         LOG.info("User found and active. Updating MentorDetail...");
 
         // Cập nhật thông tin Mentor
-        MentorDetail mentorDetail = AddMentorDetailRequestDto.toEntity(requestAddMentor);
-        mentorDetail.setProfilePic(storageService.store(requestAddMentor.getProfilePic()));
+        MentorDetail mentorDetail = AddMentorDetailRequestDto.toEntity(request);
+        mentorDetail.setProfilePic(storageService.store(request.getProfilePic()));
+        mentorDetail.setSelectedCertificate(storageService.store(request.getSelectedCertificate()));
 
         MentorDetail updatedMentorDetail = mentorDetailService.addMentorDetail(mentorDetail);
         user.setMentorDetail(updatedMentorDetail);
@@ -314,4 +326,44 @@ public class UserResource {
         response.setSuccess(true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    public void fetchUserImage(String userImageName, HttpServletResponse resp) {
+        Resource resource = storageService.load(userImageName);
+        if (resource != null) {
+            try (InputStream in = resource.getInputStream()) {
+                ServletOutputStream out = resp.getOutputStream();
+                FileCopyUtils.copy(in, out);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void updateUserAvatar(int userId, MultipartFile avatarFile) {
+        LOG.info("Check file avatar: " + avatarFile);
+        if (avatarFile == null || avatarFile.isEmpty()) {
+            throw new IllegalArgumentException("Avatar file must not be empty");
+        }
+
+        User user = userDAO.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Kiểm tra loại file (tùy chọn)
+        if (!avatarFile.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("Only image files are allowed.");
+        }
+
+        // Xóa file cũ nếu tồn tại
+        if (user.getAvatar() != null && !user.getAvatar().isBlank()) {
+            storageService.delete(user.getAvatar());
+        }
+
+        // Lưu file mới
+        String savedFileName = storageService.store(avatarFile);
+
+        // Cập nhật user
+        user.setAvatar(savedFileName);
+        userDAO.save(user);
+    }
+
 }

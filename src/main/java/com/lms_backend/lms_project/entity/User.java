@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 //import java.s.Date;
 
 @Data
@@ -46,6 +48,8 @@ public class User {
 
     private String role;
 
+    private String avatar;
+
     @OneToOne
     @JoinColumn(name = "address_id")
     private Address address;
@@ -57,5 +61,22 @@ public class User {
     private BigDecimal amount;
 
     private String status;
+
+    // Thêm vào class User
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Rating> ratings = new ArrayList<>();
+
+
+    // Thêm phương thức helper
+    public void addRating(Rating rating) {
+        ratings.add(rating);
+        rating.setUser(this);
+    }
+
+    public void removeRating(Rating rating) {
+        ratings.remove(rating);
+        rating.setUser(null);
+    }
 
 }

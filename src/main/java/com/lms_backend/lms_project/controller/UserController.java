@@ -6,10 +6,15 @@ import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
 import com.lms_backend.lms_project.dto.response.UserLoginResponse;
 import com.lms_backend.lms_project.resource.UserResource;
+import com.lms_backend.lms_project.service.RatingService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/user")
@@ -45,4 +50,41 @@ public class UserController {
     public ResponseEntity<CommonApiResponse> resendConfirm(@RequestParam("token") String email) {
         return userResource.resendConfirmToken(email);
     }
+
+    @GetMapping(value = "/{userImageName}", produces = "image/*")
+    public void fetchTourImage(@PathVariable("userImageName") String userImageName, HttpServletResponse resp) {
+        this.userResource.fetchUserImage(userImageName, resp);
+    }
+
+//    @GetMapping(value = "/{userImgAvartar}", produces = "image/*")
+//    public void fetchTourAvatar(@PathVariable("userImgAvartar") String userImgAvartar, HttpServletResponse resp) {
+//        this.userResource.fetchUserImage(userImgAvartar, resp);
+//    }
+
+    @PostMapping("/{id}/upload-avatar")
+    public ResponseEntity<CommonApiResponse> uploadAvatar(
+            @PathVariable int id,
+            @RequestParam("avatar") MultipartFile file) {
+
+        CommonApiResponse response = new CommonApiResponse();
+
+        if (file.isEmpty()) {
+            response.setResponseMessage("File is empty.");
+            response.setSuccess(false);
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            userResource.updateUserAvatar(id, file);
+            response.setResponseMessage("Avatar updated successfully");
+            response.setSuccess(true);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.setResponseMessage("Error saving avatar: " + e.getMessage());
+            response.setSuccess(false);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
 }

@@ -27,5 +27,15 @@ public class MentorDetail {
 
     private double experience;
 
+    private String languageCertificate;
+
+    private String degreeLevel;
+
+    private String selectedCertificate;
+
     private String profilePic;
+
+
+
+
 }

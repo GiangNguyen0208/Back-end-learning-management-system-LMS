@@ -7,7 +7,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.lms_backend.lms_project.dao.UserDAO;
+import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.service.StorageService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -126,9 +129,11 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public Resource loadCourseNote(String fileName) {
         File filePath = new File(COURSE_NOTE_BASEPATH, fileName);
-        if (filePath.exists())
-            return new FileSystemResource(filePath);
-        return null;
+        if (!filePath.exists()) {
+            System.err.println("File not found: " + filePath.getAbsolutePath());
+            return null;
+        }
+        return new FileSystemResource(filePath);
     }
 
     @Override
@@ -137,6 +142,8 @@ public class StorageServiceImpl implements StorageService {
         if (filePath.exists())
             filePath.delete();
     }
+
+
 
 }
 
