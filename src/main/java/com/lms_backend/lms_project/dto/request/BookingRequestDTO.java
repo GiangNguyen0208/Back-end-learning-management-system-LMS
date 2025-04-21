@@ -6,13 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class BookingRequestDTO {
-    private int courseId;
+    private List<Integer> courseIds;
 
     private int customerId;
 

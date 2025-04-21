@@ -35,7 +35,8 @@ public class MentorDetail {
 
     private String profilePic;
 
+    private int quantityCourse;
 
-
+    private int quantityStudent;
 
 }

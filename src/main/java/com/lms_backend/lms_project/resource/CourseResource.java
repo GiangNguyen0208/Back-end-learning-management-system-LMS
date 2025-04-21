@@ -99,6 +99,9 @@ public class CourseResource {
         }
 
         Course course = AddCourseRequestDto.toEntity(request);
+        int currentQuantiyCourse = mentor.getMentorDetail().getQuantityCourse();
+        MentorDetail mentorDetail = mentor.getMentorDetail();
+        mentorDetail.setQuantityCourse(currentQuantiyCourse+1);
 
         String courseNote = this.storageService.storeCourseNote(request.getNotesFileName());
         String thumbnailFilename = this.storageService.storeCourseNote(request.getThumbnail());

@@ -10,9 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CommonApiResponse {
-
     private String responseMessage;
-
     private boolean isSuccess;
 
 }

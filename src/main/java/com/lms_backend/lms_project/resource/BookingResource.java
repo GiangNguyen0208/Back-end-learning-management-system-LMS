@@ -11,10 +11,7 @@ import com.lms_backend.lms_project.Utility.Helper;
 import com.lms_backend.lms_project.dto.request.BookingRequestDTO;
 import com.lms_backend.lms_project.dto.response.BookingResponseDTO;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
-import com.lms_backend.lms_project.entity.Booking;
-import com.lms_backend.lms_project.entity.Course;
-import com.lms_backend.lms_project.entity.Payment;
-import com.lms_backend.lms_project.entity.User;
+import com.lms_backend.lms_project.entity.*;
 import com.lms_backend.lms_project.service.BookingService;
 import com.lms_backend.lms_project.service.CourseService;
 import com.lms_backend.lms_project.service.PaymentService;
@@ -45,110 +42,117 @@ public class BookingResource {
     private PaymentService paymentService;
 
     public ResponseEntity<CommonApiResponse> addBooking(BookingRequestDTO request) {
-
         LOG.info("request received for adding customer booking course");
 
         CommonApiResponse response = new CommonApiResponse();
+        String bookingTime = String.valueOf(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
 
-        String bookingTime = String
-                .valueOf(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-
-        if (request == null) {
-            response.setResponseMessage("missing input");
-            response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
-        }
-
-        if (request.getCourseId() == 0 || request.getCustomerId() == 0 || request.getCvv() == null
-                || request.getExpiryDate() == null || request.getNameOnCard() == null || request.getCardNo() == null
-                || request.getAmount() == null) {
+        if (request == null || request.getCourseIds() == null || request.getCourseIds().isEmpty()
+                || request.getCustomerId() == 0 || request.getCvv() == null || request.getExpiryDate() == null
+                || request.getNameOnCard() == null || request.getCardNo() == null || request.getAmount() == null) {
 
             response.setResponseMessage("missing input or invalid details");
             response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
-
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
         User customer = this.userService.getUserById(request.getCustomerId());
-
         if (customer == null) {
             response.setResponseMessage("customer not found!!!");
             response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
-        Course course = this.courseService.getById(request.getCourseId());
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
-        if (course == null) {
-            response.setResponseMessage("course not found!!!");
+        for (Integer courseId : request.getCourseIds()) {
+            Course course = this.courseService.getById(courseId);
+
+            if (course == null) {
+                response.setResponseMessage("course with id " + courseId + " not found!!!");
+                response.setSuccess(false);
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            List<Booking> existingBookings = this.bookingService.getByCourseAndCustomer(course, customer);
+            if (!CollectionUtils.isEmpty(existingBookings)) {
+                response.setResponseMessage("Course with id " + courseId + " already purchased!!!");
+                response.setSuccess(false);
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            BigDecimal courseAmount = course.getFee(); // hoặc bất kỳ logic nào để lấy giá
+            totalAmount = totalAmount.add(courseAmount);
+        }
+
+        if (totalAmount.compareTo(request.getAmount()) != 0) {
+            response.setResponseMessage("Invalid total amount!");
             response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
-        List<Booking> bookings = this.bookingService.getByCourseAndCustomer(course, customer);
+        for (Integer courseId : request.getCourseIds()) {
+            Course course = this.courseService.getById(courseId);
 
-        if (!CollectionUtils.isEmpty(bookings)) {
-            response.setResponseMessage("Course Already Purchased!!!");
-            response.setSuccess(false);
+            String bookingId = Helper.generateTourBookingId();
+            String paymentBookingId = Helper.generateBookingPaymentId();
 
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.BAD_REQUEST);
+            Payment payment = new Payment();
+            payment.setCardNo(request.getCardNo());
+            payment.setBookingId(bookingId);
+            payment.setAmount(course.getFee()); // từng khóa học
+            payment.setCustomer(customer);
+            payment.setCvv(request.getCvv());
+            payment.setExpiryDate(request.getExpiryDate());
+            payment.setNameOnCard(request.getNameOnCard());
+            payment.setPaymentId(paymentBookingId);
+
+            Payment savedPayment = this.paymentService.addPayment(payment);
+            if (savedPayment == null) {
+                response.setResponseMessage("Failed to purchase course with id " + courseId + ", payment failure!");
+                response.setSuccess(false);
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            // Cập nhật mentor
+            User mentor = course.getMentor();
+            mentor.setAmount(mentor.getAmount().add(course.getFee()));
+            this.userService.updateUser(mentor);
+
+            // Booking
+            Booking booking = new Booking();
+            booking.setBookingId(bookingId);
+            booking.setPayment(savedPayment);
+            booking.setAmount(course.getFee());
+            booking.setBookingTime(bookingTime);
+            booking.setCustomer(customer);
+            booking.setCourse(course);
+            booking.setStatus(Constant.BookingStatus.CONFIRMED.value());
+
+            // Cập nhật số học viên khóa học
+            course.setQuantityStudent(course.getQuantityStudent() + 1);
+
+            // Cập nhật tổng học viên của mentor
+            List<Course> courseRelative = courseService.getByMentorAndStatus(mentor, "Active");
+            int totalStudent = 0;
+            for (Course c : courseRelative) {
+                totalStudent += c.getQuantityStudent();
+            }
+            mentor.getMentorDetail().setQuantityStudent(totalStudent);
+
+            Booking savedBooking = this.bookingService.addBooking(booking);
+            if (savedBooking == null) {
+                response.setResponseMessage("Failed to book course with id " + courseId);
+                response.setSuccess(false);
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
 
-        String bookingId = Helper.generateTourBookingId();
-        String paymentBookingId = Helper.generateBookingPaymentId();
-
-        Payment payment = new Payment();
-        payment.setCardNo(request.getCardNo());
-        payment.setBookingId(bookingId);
-        payment.setAmount(request.getAmount());
-        payment.setCustomer(customer);
-        payment.setCvv(request.getCvv());
-        payment.setExpiryDate(request.getExpiryDate());
-        payment.setNameOnCard(request.getNameOnCard());
-        payment.setPaymentId(paymentBookingId);
-
-        Payment savedPayment = this.paymentService.addPayment(payment);
-
-        if (savedPayment == null) {
-            response.setResponseMessage("Failed to Purchase the Course, Payment Failure!!!");
-            response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        User mentor = course.getMentor();
-        mentor.setAmount(mentor.getAmount().add(request.getAmount()));
-
-        this.userService.updateUser(mentor);
-
-        Booking booking = new Booking();
-        booking.setBookingId(bookingId);
-        booking.setPayment(savedPayment);
-        booking.setAmount(request.getAmount());
-        booking.setBookingTime(bookingTime);
-        booking.setCustomer(customer);
-        booking.setCourse(course);
-        booking.setStatus(Constant.BookingStatus.CONFIRMED.value());
-
-        Booking savedBooking = this.bookingService.addBooking(booking);
-
-        if (savedBooking == null) {
-            response.setResponseMessage("Failed to Book Event, Internal Error");
-            response.setSuccess(false);
-
-            return new ResponseEntity<CommonApiResponse>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        response.setResponseMessage("Congralutions, Course Purchased!!!");
+        response.setResponseMessage("Congratulations! All courses purchased successfully!");
         response.setSuccess(true);
-
-        return new ResponseEntity<CommonApiResponse>(response, HttpStatus.OK);
-
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     public ResponseEntity<BookingResponseDTO> fetchAllBookings() {
 
@@ -286,13 +290,13 @@ public class BookingResource {
 
         CommonApiResponse response = new CommonApiResponse();
 
-        if (request == null || request.getCourseId() == 0 || request.getCustomerId() == 0) {
+        if (request == null || request.getCourseIds() == null || request.getCustomerId() == 0) {
             response.setResponseMessage("Missing courseId or customerId");
             response.setSuccess(false);
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
-        Course course = this.courseService.getById(request.getCourseId());
+        Course course = this.courseService.getById(request.getCourseIds().get(0));
         if (course == null) {
             response.setResponseMessage("Course not found");
             response.setSuccess(false);

@@ -28,5 +28,8 @@ public interface UserDAO extends JpaRepository<User, Integer> {
     @Query("UPDATE User a SET a.status = 'Active' WHERE a.emailId = ?1")
     int activeUser(String email);
 
+    @Query("SELECT u FROM User u WHERE u.mentorDetail IS NOT NULL AND u.role = 'Mentor'")
+    List<User> findAllMentors();
+
 
 }

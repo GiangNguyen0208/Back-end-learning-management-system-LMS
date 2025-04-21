@@ -26,4 +26,8 @@ public interface UserService {
     List<User> getUserByRoleAndStatus(String role, String status);
 
     int activeUser(String email);
+
+    List<User> getAllMentors();
+    List<User> getAllUser();
+
 }
