@@ -26,4 +26,6 @@ public class BookingRequestDTO {
     private String expiryDate;
 
     private BigDecimal amount;
+
+    private String otpConfirm;
 }
