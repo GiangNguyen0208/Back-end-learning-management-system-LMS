@@ -3,12 +3,18 @@ package com.lms_backend.lms_project.controller;
 import com.lms_backend.lms_project.Utility.Helper;
 import com.lms_backend.lms_project.Utility.JwtUtils;
 import com.lms_backend.lms_project.Utility.OtpStore;
+import com.lms_backend.lms_project.dto.request.BookingFreeRequestDTO;
 import com.lms_backend.lms_project.dto.request.BookingRequestDTO;
 import com.lms_backend.lms_project.dto.response.BookingResponseDTO;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
+import com.lms_backend.lms_project.dto.response.CourseResponseDto;
 import com.lms_backend.lms_project.resource.BookingResource;
+import com.lms_backend.lms_project.resource.CourseResource;
 import com.lms_backend.lms_project.service.EmailService;
 import com.lms_backend.lms_project.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,6 +32,8 @@ import java.time.Duration;
 @CrossOrigin(origins = "http://localhost:5173")
 public class BookingController {
 
+    private final Logger LOG = LoggerFactory.getLogger(BookingResource.class);
+
     @Autowired
     private BookingResource bookingResource;
 
@@ -35,13 +43,16 @@ public class BookingController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private CourseResource courseResource;
+
     @PostMapping("add")
     public ResponseEntity<CommonApiResponse> addEvent(@RequestBody BookingRequestDTO request) {
         System.out.println("Received booking request: " + request);
         return this.bookingResource.addBooking(request);
     }
     @PostMapping("add-free")
-    public ResponseEntity<CommonApiResponse> bookFreeCourse(@RequestBody BookingRequestDTO request) {
+    public ResponseEntity<CommonApiResponse> bookFreeCourse(@RequestBody BookingFreeRequestDTO request) {
         return this.bookingResource.bookFreeCourse(request);
     }
 
@@ -86,6 +97,12 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/fetch/course-user-id")
+    @Operation(summary = "Api to fetch course by using course id and student id")
+    public ResponseEntity<CourseResponseDto> fetchCourseById(@RequestParam("courseId") Integer courseId,
+                                                             @RequestParam("userId") Integer userId) {
+        return courseResource.fetchCourseByIdAndUserId(courseId, userId);
+    }
 
 }
 

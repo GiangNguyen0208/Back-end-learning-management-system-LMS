@@ -11,6 +11,7 @@ import java.util.List;
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.Utility.Helper;
 import com.lms_backend.lms_project.Utility.OtpStore;
+import com.lms_backend.lms_project.dto.request.BookingFreeRequestDTO;
 import com.lms_backend.lms_project.dto.request.BookingRequestDTO;
 import com.lms_backend.lms_project.dto.response.BookingResponseDTO;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
@@ -198,10 +199,6 @@ public class BookingResource {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
-
-
-
     public ResponseEntity<BookingResponseDTO> fetchAllBookings() {
 
         BookingResponseDTO response = new BookingResponseDTO();
@@ -333,62 +330,75 @@ public class BookingResource {
         return new ResponseEntity<BookingResponseDTO>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<CommonApiResponse> bookFreeCourse(BookingRequestDTO request) {
-        LOG.info("Request received to book FREE course");
+    public ResponseEntity<CommonApiResponse> bookFreeCourse(BookingFreeRequestDTO request) {
+        LOG.info("📩 Received request to book FREE course: {}", request);
 
         CommonApiResponse response = new CommonApiResponse();
 
-        if (request == null || request.getCourseIds() == null || request.getCustomerId() == 0) {
-            response.setResponseMessage("Missing courseId or customerId");
+        // 1. Validate input
+        if (request == null || request.getCourseId() == 0 || request.getCustomerId() == 0) {
+            LOG.warn("❌ Invalid request: missing courseId or customerId");
+            response.setResponseMessage("Thiếu thông tin khóa học hoặc người dùng");
             response.setSuccess(false);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        Course course = this.courseService.getById(request.getCourseIds().get(0));
+        // 2. Validate course
+        Course course = courseService.getById(request.getCourseId());
         if (course == null) {
-            response.setResponseMessage("Course not found");
+            LOG.warn("❌ Course not found with ID: {}", request.getCourseId());
+            response.setResponseMessage("Không tìm thấy khóa học");
             response.setSuccess(false);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(response);
         }
 
         if (course.getFee().compareTo(BigDecimal.ZERO) > 0) {
-            response.setResponseMessage("This course is not free");
+            LOG.warn("❌ Attempted to book a paid course as free. Course ID: {}", course.getId());
+            response.setResponseMessage("Khóa học này không miễn phí");
             response.setSuccess(false);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        User customer = this.userService.getUserById(request.getCustomerId());
+        // 3. Validate user
+        User customer = userService.getUserById(request.getCustomerId());
         if (customer == null) {
-            response.setResponseMessage("Customer not found");
+            LOG.warn("❌ Customer not found with ID: {}", request.getCustomerId());
+            response.setResponseMessage("Không tìm thấy người dùng");
             response.setSuccess(false);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        List<Booking> existingBookings = this.bookingService.getByCourseAndCustomer(course, customer);
+        // 4. Check for duplicate booking
+        List<Booking> existingBookings = bookingService.getByCourseAndCustomer(course, customer);
         if (!CollectionUtils.isEmpty(existingBookings)) {
-            response.setResponseMessage("You already enrolled in this course");
+            LOG.warn("❌ Duplicate booking attempt. Customer {} already booked Course {}", customer.getId(), course.getId());
+            response.setResponseMessage("Bạn đã đăng ký khoá học này rồi");
             response.setSuccess(false);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(response);
         }
 
+        // 5. Create booking
         Booking booking = new Booking();
         booking.setBookingId(Helper.generateTourBookingId());
         booking.setCourse(course);
         booking.setCustomer(customer);
         booking.setStatus(Constant.BookingStatus.CONFIRMED.value());
         booking.setBookingTime(String.valueOf(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
-        booking.setAmount(BigDecimal.ZERO);  // Free
+        booking.setAmount(BigDecimal.ZERO); // Miễn phí
 
-        Booking savedBooking = this.bookingService.addBooking(booking);
+        Booking savedBooking = bookingService.addBooking(booking);
         if (savedBooking == null) {
-            response.setResponseMessage("Failed to book free course");
+            LOG.error("❌ Failed to save booking for customer {} and course {}", customer.getId(), course.getId());
+            response.setResponseMessage("Đăng ký khóa học thất bại");
             response.setSuccess(false);
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
-        response.setResponseMessage("Successfully enrolled in the free course!");
+        // 6. Success
+        LOG.info("✅ Successfully enrolled customer {} to course {}", customer.getId(), course.getId());
+        response.setResponseMessage("Đăng ký khoá học miễn phí thành công!");
         response.setSuccess(true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
 }

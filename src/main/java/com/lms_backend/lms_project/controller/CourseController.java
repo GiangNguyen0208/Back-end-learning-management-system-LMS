@@ -10,16 +10,21 @@ import com.lms_backend.lms_project.dto.response.CourseResponseDto;
 import com.lms_backend.lms_project.dto.response.RatingListResponse;
 import com.lms_backend.lms_project.dto.response.RatingResponse;
 import com.lms_backend.lms_project.resource.CourseResource;
+import com.lms_backend.lms_project.service.CourseProgressService;
 import com.lms_backend.lms_project.service.RatingService;
 import com.lms_backend.lms_project.service.VideoProgressService;
+import com.lowagie.text.DocumentException;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("api/course")
@@ -34,6 +39,9 @@ public class CourseController {
 
     @Autowired
     RatingService ratingService;
+
+    @Autowired
+    CourseProgressService courseProgressService;
 
     @PostMapping("add")
     @Operation(summary = "Api to add the Mentor Course")
@@ -98,10 +106,28 @@ public class CourseController {
         this.courseResource.fetchCourseTopicVideo(courseSectionTopicVideoFileName, resp);
     }
 
-    @PostMapping("/video/progress")
+    @PutMapping("/video-progress/update")
     public ResponseEntity<?> updateProgress(@RequestBody VideoProgressDTO dto) {
-        // dto: { userId, videoId, percent }
         videoProgressService.saveOrUpdate(dto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Video progress updated");
+    }
+
+    @PostMapping("/video-progress/mark-completed")
+    public ResponseEntity<?> markCompleted(@RequestBody VideoProgressDTO dto) {
+        videoProgressService.markCompleted(dto.getUserId(), dto.getVideoId());
+        return ResponseEntity.ok("Video marked as completed");
+    }
+
+    @GetMapping("/course-progress/{userId}/{courseId}")
+    public ResponseEntity<Integer> getCourseProgress(@PathVariable int userId, @PathVariable int courseId) {
+        int progress = courseProgressService.getCourseProgress(userId, courseId);
+        return ResponseEntity.ok(progress);
+    }
+
+    @GetMapping("notes/{notesFileName}/download")
+    @Operation(summary = "Api for downloading the Course Notes")
+    public ResponseEntity<Resource> downloadNotes(@PathVariable("notesFileName") String notesFileName,
+                                                  HttpServletResponse response) throws DocumentException, IOException {
+        return this.courseResource.downloadNotes(notesFileName, response);
     }
 }

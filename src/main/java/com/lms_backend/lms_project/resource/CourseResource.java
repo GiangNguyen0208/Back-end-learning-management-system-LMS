@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -54,6 +55,9 @@ public class CourseResource {
 
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private BookingService bookingService;
 
     public ResponseEntity<CourseResponseDto> addCourse(AddCourseRequestDto request) {
 
@@ -512,6 +516,88 @@ public class CourseResource {
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    public ResponseEntity<CourseResponseDto> fetchCourseByIdAndUserId(Integer courseId, Integer userId) {
+
+        LOG.info("received request for fetching the course by id and used id");
+
+        CourseResponseDto response = new CourseResponseDto();
+
+        if (courseId == null || courseId == 0) {
+            response.setResponseMessage("missing course id");
+            response.setSuccess(false);
+
+            return new ResponseEntity<CourseResponseDto>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        Course course = this.courseService.getById(courseId);
+
+        if (course == null) {
+            response.setResponseMessage("course not found!!!");
+            response.setSuccess(false);
+
+            return new ResponseEntity<CourseResponseDto>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        List<CourseSection> sections = course.getSections();
+
+        if (!CollectionUtils.isEmpty(sections)) {
+
+            for (CourseSection section : sections) {
+
+                List<CourseSectionTopic> topics = section.getCourseSectionTopics();
+
+                if (!CollectionUtils.isEmpty(topics)) {
+
+                    for (CourseSectionTopic topic : topics) {
+                        topic.setVideoFileName("");
+                    }
+
+                }
+
+            }
+
+        }
+
+        User student = null;
+
+        if (userId > 0 && course.getType().equals(Constant.CourseType.PAID.value())) {
+            student = this.userService.getUserById(userId);
+
+            if (student != null) {
+
+                List<Booking> bookings = this.bookingService.getByCourseAndCustomer(course, student);
+
+                if (!CollectionUtils.isEmpty(bookings)) {
+                    response.setIsCoursePurchased(Constant.CoursePurchased.YES.value());
+                } else {
+                    response.setIsCoursePurchased(Constant.CoursePurchased.NO.value());
+                }
+
+            }
+
+        }
+
+        response.setCourse(course);
+        response.setResponseMessage("Course Fetched Successful!!!");
+        response.setSuccess(true);
+
+        return new ResponseEntity<CourseResponseDto>(response, HttpStatus.OK);
+
+    }
+
+    public ResponseEntity<Resource> downloadNotes(String notesFileName, HttpServletResponse response) {
+
+        Resource resource = storageService.loadCourseNote(notesFileName);
+        if (resource == null) {
+            // Handle file not found
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Course_Notes\"")
+                .body(resource);
+
     }
 
 //    public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(String status, String videoShow) {
