@@ -94,4 +94,14 @@ public class UserServiceImpl implements UserService {
     public int activeUser(String email) {
         return userDao.activeUser(email);
     }
+
+    @Override
+    public List<User> getAllMentors() {
+        return userDao.findAllMentors();
+    }
+
+    @Override
+    public List<User> getAllUser() {
+        return userDao.findAll();
+    }
 }

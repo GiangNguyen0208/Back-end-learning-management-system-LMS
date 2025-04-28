@@ -42,6 +42,10 @@ public class Booking {
 
     private BigDecimal amount;
 
+    private int discountInPercent;
+
+    private String otpConfirm;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id")
     private Payment payment;

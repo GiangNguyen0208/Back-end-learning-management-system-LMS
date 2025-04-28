@@ -40,4 +40,22 @@ public class EmailServiceImpl implements EmailService {
 
     }
 
+    @Override
+    @Async
+    public void sendOtpEmail(String email, String otp) {
+        LOG.info("Sending OTP '{}' to email '{}'", otp, email);
+        try {
+            MimeMessage mimeMessage = mail.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            helper.setText("Mã xác thực thanh toán của bạn là: <b>" + otp + "</b>", true);
+            helper.setTo(email);
+            helper.setSubject("Xác nhận thanh toán khóa học");
+            helper.setFrom("demo.admin@demo.com");
+            mail.send(mimeMessage);
+        } catch (MessagingException e) {
+            LOG.error("Gửi OTP thất bại", e);
+            throw new IllegalStateException("Không thể gửi OTP");
+        }
+    }
+
 }

@@ -12,20 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BookingRequestDTO {
-    private List<Integer> courseIds;
-
+public class BookingFreeRequestDTO {
+    private int courseId;
     private int customerId;
-
-    private String cardNo;
-
-    private String nameOnCard;
-
-    private String cvv;
-
-    private String expiryDate;
-
-    private BigDecimal amount;
-
-    private String otpConfirm;
 }

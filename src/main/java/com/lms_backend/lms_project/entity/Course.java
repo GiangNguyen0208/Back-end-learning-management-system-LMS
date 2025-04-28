@@ -43,6 +43,8 @@ public class Course {
 
     private int discountInPercent;
 
+    private int quantityStudent;
+
     @Column(columnDefinition = "LONGTEXT")
     private String authorCourseNote;
 
