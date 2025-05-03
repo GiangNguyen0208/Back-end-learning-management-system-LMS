@@ -1,15 +1,18 @@
 package com.lms_backend.lms_project.resource;
 
 import com.lms_backend.lms_project.Utility.Constant;
+import com.lms_backend.lms_project.dao.CourseDao;
 import com.lms_backend.lms_project.dto.CourseDTO;
 import com.lms_backend.lms_project.dto.CourseSectionDTO;
 import com.lms_backend.lms_project.dto.CourseSectionTopicDTO;
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
 import com.lms_backend.lms_project.dto.response.RatingResponse;
 import com.lms_backend.lms_project.entity.*;
+import com.lms_backend.lms_project.exception.ResourceNotFoundException;
 import com.lms_backend.lms_project.service.*;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
@@ -58,6 +61,8 @@ public class CourseResource {
 
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private CourseDao courseDao;
 
     public ResponseEntity<CourseResponseDto> addCourse(AddCourseRequestDto request) {
 

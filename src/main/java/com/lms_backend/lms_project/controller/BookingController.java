@@ -3,6 +3,7 @@ package com.lms_backend.lms_project.controller;
 import com.lms_backend.lms_project.Utility.Helper;
 import com.lms_backend.lms_project.Utility.JwtUtils;
 import com.lms_backend.lms_project.Utility.OtpStore;
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.BookingFreeRequestDTO;
 import com.lms_backend.lms_project.dto.request.BookingRequestDTO;
 import com.lms_backend.lms_project.dto.response.BookingResponseDTO;
@@ -17,15 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/booking")
@@ -104,5 +100,13 @@ public class BookingController {
         return courseResource.fetchCourseByIdAndUserId(courseId, userId);
     }
 
+    @GetMapping("/students/{mentorId}/{courseId}")
+    public ResponseEntity<List<UserDTO>> getStudentsByCourseAndMentor(
+            @PathVariable int mentorId,
+            @PathVariable int courseId) {
+
+        List<UserDTO> students = bookingResource.getStudentsByCourseAndMentor(mentorId, courseId);
+        return ResponseEntity.ok(students);
+    }
 }
 

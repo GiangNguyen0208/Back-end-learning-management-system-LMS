@@ -67,7 +67,6 @@ public class User {
     @JsonIgnore
     private List<Rating> ratings = new ArrayList<>();
 
-
     // Thêm phương thức helper
     public void addRating(Rating rating) {
         ratings.add(rating);

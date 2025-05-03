@@ -7,21 +7,27 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.Utility.Helper;
 import com.lms_backend.lms_project.Utility.OtpStore;
+import com.lms_backend.lms_project.dao.BookingDAO;
+import com.lms_backend.lms_project.dao.CourseDao;
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.BookingFreeRequestDTO;
 import com.lms_backend.lms_project.dto.request.BookingRequestDTO;
 import com.lms_backend.lms_project.dto.response.BookingResponseDTO;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.entity.*;
+import com.lms_backend.lms_project.exception.ResourceNotFoundException;
 import com.lms_backend.lms_project.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -45,6 +51,10 @@ public class BookingResource {
 
     @Autowired
     EmailService emailService;
+    @Autowired
+    private CourseDao courseDao;
+    @Autowired
+    private BookingDAO bookingDAO;
 
     public ResponseEntity<CommonApiResponse> addBooking(BookingRequestDTO request) {
         LOG.info("Request received for adding customer booking course: {}", request);  // Log yêu cầu chi tiết
@@ -401,5 +411,35 @@ public class BookingResource {
         return ResponseEntity.ok(response);
     }
 
+    public List<UserDTO> getStudentsByCourseAndMentor(int mentorId, int courseId) {
+        // 1. Kiểm tra mentor có phải là người hướng dẫn của khóa học không
+        Course course = courseDao.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+
+        if (course.getMentor() == null || course.getMentor().getId() != mentorId) {
+            throw new AccessDeniedException("Mentor không phải người hướng dẫn của khóa học này");
+        }
+
+        // 2. Lấy danh sách booking theo courseId và status là "confirmed"
+        List<Booking> confirmedBookings = bookingDAO.findStudentsByCourseAndMentor(courseId, mentorId);
+
+        // 3. Chuyển đổi sang DTO
+        return confirmedBookings.stream()
+                .map(Booking::getCustomer)
+                .filter(user -> "Student".equals(user.getRole())) // Chỉ lấy user có role STUDENT
+                .map(this::convertToUserDTO)
+                .collect(Collectors.toList());
+    }
+
+    private UserDTO convertToUserDTO(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .emailId(user.getEmailId())
+                .phoneNo(user.getPhoneNo())
+                .avatar(user.getAvatar())
+                .build();
+    }
 }
 

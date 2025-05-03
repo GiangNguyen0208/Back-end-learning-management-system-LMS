@@ -1,6 +1,7 @@
 package com.lms_backend.lms_project.controller;
 
 
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.VideoProgressDTO;
 import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
@@ -25,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/course")
@@ -67,6 +69,7 @@ public class CourseController {
                                                                   @RequestParam("status") String status, @RequestParam("videoShow") String videoShow) {
         return courseResource.fetchCoursesByMentor(mentorId, status, videoShow);
     }
+
     @GetMapping("/fetch/course-id")
     @Operation(summary = "Api to fetch course by using course id")
     public ResponseEntity<CourseResponseDto> fetchCourseById(@RequestParam("courseId") Integer courseId,
@@ -130,4 +133,7 @@ public class CourseController {
                                                   HttpServletResponse response) throws DocumentException, IOException {
         return this.courseResource.downloadNotes(notesFileName, response);
     }
+
+
+
 }
