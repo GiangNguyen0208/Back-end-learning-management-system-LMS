@@ -1,12 +1,11 @@
 package com.lms_backend.lms_project.controller;
 
 
+import com.lms_backend.lms_project.dto.CourseDTO;
 import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.VideoProgressDTO;
-import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
-import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
-import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
-import com.lms_backend.lms_project.dto.request.RatingRequest;
+import com.lms_backend.lms_project.dto.request.*;
+import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
 import com.lms_backend.lms_project.dto.response.RatingListResponse;
 import com.lms_backend.lms_project.dto.response.RatingResponse;
@@ -51,6 +50,12 @@ public class CourseController {
         return this.courseResource.addCourse(request);
     }
 
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Api to update category")
+    public ResponseEntity<CommonApiResponse> updateCategory(@PathVariable("id") int id, @ModelAttribute CourseDTO request) {
+        return courseResource.updateCourse(id, request);
+    }
+
     @PostMapping("section/add")
     @Operation(summary = "Api to add the course section")
     public ResponseEntity<CourseResponseDto> addCourseSection(@RequestBody AddCourseSectionRequestDto request) {
@@ -89,18 +94,7 @@ public class CourseController {
         return courseResource.fetchCoursesByStatus(status, videoShow);
     }
 
-    @GetMapping("/ratings/{courseId}")
-    public ResponseEntity<RatingListResponse> getRatingsByCourse(
-            @PathVariable int courseId) {
-        return ResponseEntity.ok(ratingService.fetchRatingsByCourse(courseId));
-    }
 
-    @PostMapping("/rating/add")
-    public ResponseEntity<RatingResponse> addRating(
-            @Valid @RequestBody RatingRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ratingService.addRating(request));
-    }
 
     @GetMapping(value = "/video/{courseSectionTopicVideoFileName}", produces = "video/*")
     public void fetchCourseTopicVideo(
@@ -134,6 +128,10 @@ public class CourseController {
         return this.courseResource.downloadNotes(notesFileName, response);
     }
 
-
+    @GetMapping("/fetch/name-wise")
+    @Operation(summary = "Api to fetch courses by using name")
+    public ResponseEntity<CourseResponseDto> fetchCoursesByName(@RequestParam("courseName") String courseName) {
+        return courseResource.fetchCoursesByName(courseName);
+    }
 
 }

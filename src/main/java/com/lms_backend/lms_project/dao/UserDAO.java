@@ -31,5 +31,4 @@ public interface UserDAO extends JpaRepository<User, Integer> {
     @Query("SELECT u FROM User u WHERE u.mentorDetail IS NOT NULL AND u.role = 'Mentor'")
     List<User> findAllMentors();
 
-
 }

@@ -5,6 +5,7 @@ import com.lms_backend.lms_project.dto.request.UserLoginRequest;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
 import com.lms_backend.lms_project.dto.response.UserLoginResponse;
+import com.lms_backend.lms_project.entity.Rating;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.resource.UserResource;
 import com.lms_backend.lms_project.service.RatingService;
@@ -103,6 +104,7 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
 
 
 }

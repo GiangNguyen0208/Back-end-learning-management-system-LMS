@@ -1,7 +1,9 @@
 package com.lms_backend.lms_project.serviceimpl;
 
+import com.lms_backend.lms_project.dao.RatingDAO;
 import com.lms_backend.lms_project.dao.UserDAO;
 import com.lms_backend.lms_project.entity.ConfirmationToken;
+import com.lms_backend.lms_project.entity.Rating;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    private RatingDAO ratingDAO;
 
     @Override
     public User addUser(User user) {
@@ -104,4 +109,5 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllUser() {
         return userDao.findAll();
     }
+
 }

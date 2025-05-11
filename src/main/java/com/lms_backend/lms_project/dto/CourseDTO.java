@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,13 +20,13 @@ public class CourseDTO {
     private String type;
     private BigDecimal fee;
     private String addedDateTime;
-    private String notesFileName;
-    private String thumbnail;
     private String status;
     private int discountInPercent;
     private String authorCourseNote;
     private String specialNote;
     private String prerequisite;
+    private MultipartFile notesFileName;
+    private MultipartFile thumbnail;
 
     // Mentor info
     private int mentorId;
@@ -37,6 +38,7 @@ public class CourseDTO {
 
     // Rating
     private double averageRating;
+    private int totalRating;
 
     // Sections and topics
     private List<CourseSectionDTO> sections;

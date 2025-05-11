@@ -1,5 +1,6 @@
 package com.lms_backend.lms_project.dto.response;
 
+import com.lms_backend.lms_project.dto.CourseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class RatingResponse {
     private String comment;
     private LocalDateTime createdAt;
     private UserInfo user;
+    private CourseDTO course;
 
     @Data
     @Builder

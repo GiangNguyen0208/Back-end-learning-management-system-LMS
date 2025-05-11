@@ -1,5 +1,6 @@
 package com.lms_backend.lms_project.service;
 
+import com.lms_backend.lms_project.entity.Rating;
 import com.lms_backend.lms_project.entity.User;
 
 import java.util.List;
@@ -29,5 +30,6 @@ public interface UserService {
 
     List<User> getAllMentors();
     List<User> getAllUser();
+
 
 }

@@ -2,6 +2,7 @@ package com.lms_backend.lms_project.dao;
 
 import com.lms_backend.lms_project.dto.response.RatingResponse;
 import com.lms_backend.lms_project.entity.Rating;
+import com.lms_backend.lms_project.entity.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,4 +25,8 @@ public interface RatingDAO extends JpaRepository<Rating, Integer> {
 
     @Query("SELECT r.rating, COUNT(r) FROM Rating r WHERE r.course.id = :courseId GROUP BY r.rating")
     List<Object[]> getRatingDistribution(@Param("courseId") int courseId);
+
+    @Query("SELECT r FROM Rating r WHERE r.user.id = :userId")
+    List<Rating> findAllByUserId(@Param("userId") int userId);
+
 }

@@ -426,8 +426,9 @@ public class BookingResource {
         // 3. Chuyển đổi sang DTO
         return confirmedBookings.stream()
                 .map(Booking::getCustomer)
-                .filter(user -> "Student".equals(user.getRole())) // Chỉ lấy user có role STUDENT
+                .distinct()
                 .map(this::convertToUserDTO)
+                .filter(userDTO -> userDTO.getFirstName() != null || userDTO.getLastName() != null) // Lọc các đối tượng không có tên
                 .collect(Collectors.toList());
     }
 
