@@ -1,10 +1,14 @@
 package com.lms_backend.lms_project.controller;
 
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.AddMentorDetailRequestDto;
+import com.lms_backend.lms_project.dto.request.ChangePasswordRequestDTO;
 import com.lms_backend.lms_project.dto.request.UserLoginRequest;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
 import com.lms_backend.lms_project.dto.response.UserLoginResponse;
+import com.lms_backend.lms_project.dto.response.UserResponseDTO;
+import com.lms_backend.lms_project.entity.Rating;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.resource.UserResource;
 import com.lms_backend.lms_project.service.RatingService;
@@ -12,12 +16,14 @@ import com.lms_backend.lms_project.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/user")
@@ -29,6 +35,11 @@ public class UserController {
     @Autowired
     UserService userService;
 
+    @GetMapping("/fetch-all")
+    public ResponseEntity<UserResponseDTO> fetchAllUser(){
+        return userResource.fetchAllUser();
+    }
+
     @PostMapping("/login")
     @Operation(summary = "Api to login any User")
     public ResponseEntity<UserLoginResponse> login(@RequestBody UserLoginRequest userLoginRequest) {
@@ -39,11 +50,43 @@ public class UserController {
     public ResponseEntity<CommonApiResponse> register(@RequestBody RegisterUserRequestDTO request){
         return userResource.registerUser(request);
     }
+    @GetMapping("/forget-password")
+    @Operation(summary = "Api to login any User")
+    public ResponseEntity<CommonApiResponse> forgetPassword(@RequestParam String email) {
+        return userResource.forgetPassword(email);
+    }
 
+    @PutMapping("/reset-password")
+    @Operation(summary = "Api to reset password")
+    public ResponseEntity<CommonApiResponse> resetPassword(@RequestBody ChangePasswordRequestDTO request) {
+        return userResource.resetPassword(request);
+    }
+
+    @PutMapping("/change-password")
+    @Operation(summary = "Api to change password")
+    public ResponseEntity<CommonApiResponse> changePassword(@RequestBody ChangePasswordRequestDTO request) {
+        return userResource.changePassword(request);
+    }
 
     @GetMapping(path = "/confirm")
     public ResponseEntity<CommonApiResponse> confirm(@RequestParam("token") String token) {
         return userResource.confirmToken(token);
+    }
+
+    @GetMapping("/verify-reset-token")
+    public ResponseEntity<?> verifyResetToken(@RequestParam("token") String token) {
+        Optional<User> userOpt = userService.verifyResetPasswordToken(token);
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token không hợp lệ hoặc đã hết hạn.");
+        }
+
+        User user = userOpt.get();
+
+        return ResponseEntity.ok(Map.of(
+                "email", user.getEmailId(),
+                "username", user.getUsername()
+        ));
     }
 
     @GetMapping(path = "/resend-confirmation")
@@ -103,6 +146,7 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
 
 
 }

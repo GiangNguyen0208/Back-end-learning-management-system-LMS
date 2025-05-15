@@ -6,22 +6,30 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.Utility.Helper;
 import com.lms_backend.lms_project.Utility.OtpStore;
+import com.lms_backend.lms_project.dao.BookingDAO;
+import com.lms_backend.lms_project.dao.CourseDao;
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.BookingFreeRequestDTO;
 import com.lms_backend.lms_project.dto.request.BookingRequestDTO;
 import com.lms_backend.lms_project.dto.response.BookingResponseDTO;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.entity.*;
+import com.lms_backend.lms_project.exception.ResourceNotFoundException;
 import com.lms_backend.lms_project.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -45,6 +53,10 @@ public class BookingResource {
 
     @Autowired
     EmailService emailService;
+    @Autowired
+    private CourseDao courseDao;
+    @Autowired
+    private BookingDAO bookingDAO;
 
     public ResponseEntity<CommonApiResponse> addBooking(BookingRequestDTO request) {
         LOG.info("Request received for adding customer booking course: {}", request);  // Log yêu cầu chi tiết
@@ -132,13 +144,19 @@ public class BookingResource {
         for (Integer courseId : request.getCourseIds()) {
             Course course = this.courseService.getById(courseId);
 
+            // Calculate fee original
+            BigDecimal fee = course.getFee();
+            BigDecimal discountPercent = BigDecimal.valueOf(course.getDiscountInPercent());
+            BigDecimal discountAmount = fee.multiply(discountPercent).divide(BigDecimal.valueOf(100));
+            BigDecimal feeOriginal = fee.subtract(discountAmount);
+
             String bookingId = Helper.generateTourBookingId();
             String paymentBookingId = Helper.generateBookingPaymentId();
 
             Payment payment = new Payment();
             payment.setCardNo(request.getCardNo());
             payment.setBookingId(bookingId);
-            payment.setAmount(course.getFee());
+            payment.setAmount(feeOriginal);
             payment.setCustomer(customer);
             payment.setCvv(request.getCvv());
             payment.setExpiryDate(request.getExpiryDate());
@@ -400,6 +418,57 @@ public class BookingResource {
         response.setSuccess(true);
         return ResponseEntity.ok(response);
     }
+
+    public List<UserDTO> getStudentsByCourseAndMentor(int mentorId, int courseId) {
+        // 1. Kiểm tra mentor có phải là người hướng dẫn của khóa học không
+        Course course = courseDao.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+
+        if (course.getMentor() == null || course.getMentor().getId() != mentorId) {
+            throw new AccessDeniedException("Mentor không phải người hướng dẫn của khóa học này");
+        }
+
+        // 2. Lấy danh sách booking theo courseId và status là "confirmed"
+        List<Booking> confirmedBookings = bookingDAO.findStudentsByCourseAndMentor(courseId, mentorId);
+
+        // 3. Chuyển đổi sang DTO
+        return confirmedBookings.stream()
+                .map(Booking::getCustomer)
+                .distinct()
+                .map(this::convertToUserDTO)
+                .filter(userDTO -> userDTO.getFirstName() != null || userDTO.getLastName() != null) // Lọc các đối tượng không có tên
+                .collect(Collectors.toList());
+    }
+
+    private UserDTO convertToUserDTO(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .emailId(user.getEmailId())
+                .phoneNo(user.getPhoneNo())
+                .avatar(user.getAvatar())
+                .build();
+    }
+
+    public List<User> fetchStudentByCourse(int courseId) {
+        LOG.info("Request list student by course ID: " + courseId);
+
+        if (courseId == 0) {
+            LOG.warn("Course ID is missing or invalid");
+            return Collections.emptyList();  // trả về danh sách rỗng thay vì ResponseEntity
+        }
+
+        List<User> studentsByCourse = bookingService.fetchStudentsByCourse(courseId);
+
+        if (studentsByCourse == null) {
+            return Collections.emptyList();
+        }
+
+        return studentsByCourse;
+    }
+
+
 
 }
 

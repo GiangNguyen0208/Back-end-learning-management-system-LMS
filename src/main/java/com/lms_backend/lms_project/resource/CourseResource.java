@@ -1,21 +1,29 @@
 package com.lms_backend.lms_project.resource;
 
 import com.lms_backend.lms_project.Utility.Constant;
+import com.lms_backend.lms_project.Utility.CustomMultipartFile;
+import com.lms_backend.lms_project.dao.CourseDao;
 import com.lms_backend.lms_project.dto.CourseDTO;
 import com.lms_backend.lms_project.dto.CourseSectionDTO;
 import com.lms_backend.lms_project.dto.CourseSectionTopicDTO;
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
 import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
+import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
 import com.lms_backend.lms_project.dto.response.RatingResponse;
 import com.lms_backend.lms_project.entity.*;
+import com.lms_backend.lms_project.exception.CategorySaveFailedException;
+import com.lms_backend.lms_project.exception.CourseSaveFailedException;
+import com.lms_backend.lms_project.exception.ResourceNotFoundException;
 import com.lms_backend.lms_project.service.*;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,12 +31,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +49,15 @@ import java.util.stream.Collectors;
 @Component
 public class CourseResource {
     private final Logger LOG = LoggerFactory.getLogger(CourseResource.class);
+
+    @Value("${com.lms.profile.image.folder.path}")
+    private String PROFILE_PIC_BASEPATH;
+
+    @Value("${com.lms.course.video.folder.path}")
+    private String COURSE_VIDEO_BASEPATH;
+
+    @Value("${com.lms.course.notes.folder.path}")
+    private String COURSE_NOTE_BASEPATH;
 
     @Autowired
     private CourseService courseService;
@@ -58,6 +79,8 @@ public class CourseResource {
 
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private CourseDao courseDao;
 
     public ResponseEntity<CourseResponseDto> addCourse(AddCourseRequestDto request) {
 
@@ -425,6 +448,11 @@ public class CourseResource {
     }
 
     private CourseDTO convertToCourseDTO(Course course, String videoShow) {
+        // Chuyển từ File sang CustomMultipartFile
+        File fileNote = new File(COURSE_NOTE_BASEPATH, course.getNotesFileName());
+        File fileThumbnail = new File(COURSE_NOTE_BASEPATH, course.getThumbnail());
+        CustomMultipartFile fileNoteMultipart = new CustomMultipartFile(fileNote);
+        CustomMultipartFile fileThumbnailMultipart = new CustomMultipartFile(fileThumbnail);
         CourseDTO.CourseDTOBuilder builder = CourseDTO.builder()
                 .id(course.getId())
                 .name(course.getName())
@@ -435,6 +463,7 @@ public class CourseResource {
                 .notesFileName(course.getNotesFileName())
                 .thumbnail(course.getThumbnail())
                 .status(course.getStatus())
+                .totalRating(course.getTotalRating())
                 .discountInPercent(course.getDiscountInPercent())
                 .authorCourseNote(course.getAuthorCourseNote())
                 .specialNote(course.getSpecialNote())
@@ -599,6 +628,178 @@ public class CourseResource {
                 .body(resource);
 
     }
+
+    public ResponseEntity<CourseResponseDto> fetchCoursesByName(String nameSearch) {
+
+        LOG.info("Received request for fetching courses by name");
+
+        CourseResponseDto response = new CourseResponseDto();
+
+        // Kiểm tra nếu nameSearch null
+        if (nameSearch == null) {
+            response.setResponseMessage("Missing input");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Tìm kiếm khóa học theo tên khóa học
+        List<Course> coursesByNameCourse = this.courseService.getByNameAndStatus(nameSearch, Constant.ActiveStatus.ACTIVE.value());
+        // Tìm kiếm khóa học theo tên category
+        List<Course> coursesByNameCategory = this.categoryService.getCoursesByCategoryName(nameSearch, Constant.ActiveStatus.ACTIVE.value());
+
+        // Kết hợp các khóa học tìm được từ tên khóa học và tên category
+        List<Course> allCourses = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(coursesByNameCourse)) {
+            allCourses.addAll(coursesByNameCourse);
+        }
+
+        if (!CollectionUtils.isEmpty(coursesByNameCategory)) {
+            allCourses.addAll(coursesByNameCategory);
+        }
+
+        // Nếu không có khóa học nào tìm được
+        if (allCourses.isEmpty()) {
+            response.setResponseMessage("Courses not found!!!");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        // Xử lý khóa học (nếu cần thiết)
+        for (Course course : allCourses) {
+            List<CourseSection> sections = course.getSections();
+            if (!CollectionUtils.isEmpty(sections)) {
+                for (CourseSection section : sections) {
+                    List<CourseSectionTopic> topics = section.getCourseSectionTopics();
+                    if (!CollectionUtils.isEmpty(topics)) {
+                        for (CourseSectionTopic topic : topics) {
+                            topic.setVideoFileName("");  // Nếu cần, có thể set lại video filename
+                        }
+                    }
+                }
+            }
+        }
+
+        // Trả về kết quả khóa học đã tìm
+        response.setCourses(allCourses);
+        response.setResponseMessage("Courses fetched successfully!");
+        response.setSuccess(true);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<CommonApiResponse> updateCourse(int courseId, CourseDTO request) {
+        LOG.info("Request received for update course");
+
+        CommonApiResponse response = new CommonApiResponse();
+
+        if (request == null) {
+            response.setResponseMessage("Missing input");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        if (request.getId() == 0) {
+            response.setResponseMessage("Missing category ID");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Kiểm tra xem category có tồn tại không
+        Category newCategory = categoryService.getCategoryById(request.getCategoryId());
+        if (newCategory == null) {
+            response.setResponseMessage("Category not found");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
+        // Cập nhật thông tin Course
+        Course course = courseService.getById(courseId);
+        if (course == null) {
+            throw new CourseSaveFailedException("Failed to find course");
+        }
+
+        User mentor = this.userService.getUserById(request.getMentorId());
+
+        if (mentor == null) {
+            response.setResponseMessage("mentor not found");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
+        // Chỉ lưu file mới nếu có thay đổi
+        MultipartFile noteFile = storageService.getCourseNoteAndThumbnailAsMultipartFile(request.getNotesFileName());
+        MultipartFile thumbnailFile = storageService.getCourseNoteAndThumbnailAsMultipartFile(request.getThumbnail());
+        String courseNote = null;
+        String thumbnailFilename = null;
+
+        if (request.getNotesFileName() != null && !request.getNotesFileName().isEmpty()) {
+            courseNote = this.storageService.storeCourseNote(noteFile);
+        } else {
+            courseNote = course.getNotesFileName(); // Giữ lại file cũ nếu không có file mới
+        }
+
+        if (request.getThumbnail() != null && !request.getThumbnail().isEmpty()) {
+            thumbnailFilename = this.storageService.storeCourseNote(thumbnailFile);
+        } else {
+            thumbnailFilename = course.getThumbnail(); // Giữ lại thumbnail cũ nếu không có thumbnail mới
+        }
+
+        // Chỉ cập nhật các trường có thay đổi
+        if (!course.getName().equals(request.getName())) {
+            course.setName(request.getName());
+        }
+        if (!course.getDescription().equals(request.getDescription())) {
+            course.setDescription(request.getDescription());
+        }
+        if (!course.getFee().equals(request.getFee())) {
+            course.setFee(request.getFee());
+        }
+        if (course.getDiscountInPercent() != (request.getDiscountInPercent())) {
+            course.setDiscountInPercent(request.getDiscountInPercent());
+        }
+        if (!course.getAuthorCourseNote().equals(request.getAuthorCourseNote())) {
+            course.setAuthorCourseNote(request.getAuthorCourseNote());
+        }
+        if (!course.getSpecialNote().equals(request.getSpecialNote())) {
+            course.setSpecialNote(request.getSpecialNote());
+        }
+        if (!course.getPrerequisite().equals(request.getPrerequisite())) {
+            course.setPrerequisite(request.getPrerequisite());
+        }
+        if (!course.getType().equals(request.getType())) {
+            course.setType(request.getType());
+        }
+        if (courseNote != null) {
+            course.setNotesFileName(courseNote);
+        }
+        if (thumbnailFilename != null) {
+            course.setThumbnail(thumbnailFilename);
+        }
+        if (!course.getCategory().equals(newCategory)) {
+            course.setCategory(newCategory);
+        }
+        if (!course.getMentor().equals(mentor)) {
+            course.setMentor(mentor);
+        }
+
+        // Cập nhật thời gian thêm vào nếu có sự thay đổi
+        String addedDateTime = String.valueOf(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        course.setAddedDateTime(addedDateTime);
+
+        // Lưu khóa học đã cập nhật
+        Course saveCourse = courseService.update(course);
+
+        if (saveCourse == null) {
+            throw new CourseSaveFailedException("Failed to update course");
+        }
+
+        response.setResponseMessage("Course Updated Successfully");
+        response.setSuccess(true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
 
 //    public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(String status, String videoShow) {
 //

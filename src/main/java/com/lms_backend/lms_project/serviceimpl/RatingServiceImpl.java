@@ -3,6 +3,7 @@ package com.lms_backend.lms_project.serviceimpl;
 import com.lms_backend.lms_project.dao.CourseDao;
 import com.lms_backend.lms_project.dao.RatingDAO;
 import com.lms_backend.lms_project.dao.UserDAO;
+import com.lms_backend.lms_project.dto.CourseDTO;
 import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.RatingRequest;
 import com.lms_backend.lms_project.dto.response.RatingListResponse;
@@ -71,6 +72,7 @@ public class RatingServiceImpl implements RatingService {
 
         // Làm tròn rating đến 0.5
         double roundedRating = Math.round(request.getRating() * 2) / 2.0;
+        int totalRating = course.getTotalRating();
 
         Rating rating = new Rating();
         rating.setRating(roundedRating);
@@ -79,6 +81,8 @@ public class RatingServiceImpl implements RatingService {
         rating.setCourse(course);
 
         Rating savedRating = ratingDAO.save(rating);
+        // Save rating count of course;
+        course.setTotalRating(totalRating+1);
 
         return convertToResponse(savedRating);
     }
@@ -89,6 +93,10 @@ public class RatingServiceImpl implements RatingService {
                 .rating(rating.getRating())
                 .comment(rating.getComment())
                 .createdAt(rating.getCreatedAt())
+                .course(CourseDTO.builder()
+                        .id(rating.getCourse().getId())
+                        .name(rating.getCourse().getName())
+                        .build())
                 .user(RatingResponse.UserInfo.builder()
                         .id(rating.getUser().getId())
                         .firstName(rating.getUser().getFirstName())
@@ -96,6 +104,13 @@ public class RatingServiceImpl implements RatingService {
                         .avatar(rating.getUser().getAvatar())
                         .role(rating.getUser().getRole())
                         .build())
+                .build();
+    }
+    @Override
+    public RatingListResponse getRatingsByUser(int userId) {
+        List<Rating> ratings = ratingDAO.findAllByUserId(userId);
+        return RatingListResponse.builder()
+                .ratings(ratings.stream().map(this::convertToResponse).collect(Collectors.toList()))
                 .build();
     }
 }

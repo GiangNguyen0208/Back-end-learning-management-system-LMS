@@ -24,5 +24,7 @@ public interface CourseDao extends JpaRepository<Course, Integer> {
 
     Long countByMentorAndStatus(User mentor, String status);
 
+    List<Course> findByCategory_NameContainingIgnoreCaseAndStatusOrderByIdDesc(String categoryNamePart, String status);
+
 }
 

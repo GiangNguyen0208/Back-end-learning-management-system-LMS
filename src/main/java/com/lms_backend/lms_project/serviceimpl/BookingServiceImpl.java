@@ -76,4 +76,9 @@ public class BookingServiceImpl implements BookingService {
         return bookingDAO.findByCourseAndCustomer(course, customer);
     }
 
+    @Override
+    public List<User> fetchStudentsByCourse(int courseId) {
+        return bookingDAO.findStudentsByCourseId(courseId);
+    }
+
 }

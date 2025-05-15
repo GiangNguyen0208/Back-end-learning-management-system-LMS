@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Builder
 @Data
 @AllArgsConstructor
@@ -12,6 +14,5 @@ import lombok.NoArgsConstructor;
 public class CommonApiResponse {
     private String responseMessage;
     private boolean isSuccess;
-
 }
 

@@ -1,5 +1,6 @@
 package com.lms_backend.lms_project.serviceimpl;
 
+import com.lms_backend.lms_project.dao.RatingDAO;
 import com.lms_backend.lms_project.dao.UserDAO;
 import com.lms_backend.lms_project.entity.ConfirmationToken;
 import com.lms_backend.lms_project.entity.User;
@@ -23,6 +24,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    private RatingDAO ratingDAO;
 
     @Override
     public User addUser(User user) {
@@ -103,5 +107,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUser() {
         return userDao.findAll();
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        return userDao.findByEmailId(email);
+    }
+
+    @Override
+    public Optional<User> verifyResetPasswordToken(String token) {
+        Optional<ConfirmationToken> optionalToken = confirmationTokenService.getToken(token);
+
+        if (optionalToken.isEmpty()) {
+            return Optional.empty();
+        }
+
+        ConfirmationToken confirmationToken = optionalToken.get();
+
+        if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            return Optional.empty();
+        }
+
+        return Optional.of(confirmationToken.getUser());
     }
 }

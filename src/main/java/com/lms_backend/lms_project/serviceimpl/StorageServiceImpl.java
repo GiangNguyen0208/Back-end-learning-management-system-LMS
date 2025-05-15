@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.lms_backend.lms_project.Utility.CustomMultipartFile;
 import com.lms_backend.lms_project.dao.UserDAO;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.service.StorageService;
@@ -143,7 +144,11 @@ public class StorageServiceImpl implements StorageService {
             filePath.delete();
     }
 
-
+    @Override
+    public MultipartFile getCourseNoteAndThumbnailAsMultipartFile(String fileName) {
+        File file = new File(COURSE_NOTE_BASEPATH + "/" + fileName); // courseNotesLocation là thư mục lưu trữ
+        return new CustomMultipartFile(file);
+    }
 
 }
 

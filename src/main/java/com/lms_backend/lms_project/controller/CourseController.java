@@ -1,14 +1,15 @@
 package com.lms_backend.lms_project.controller;
 
 
+import com.lms_backend.lms_project.dto.CourseDTO;
+import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.VideoProgressDTO;
-import com.lms_backend.lms_project.dto.request.AddCourseRequestDto;
-import com.lms_backend.lms_project.dto.request.AddCourseSectionRequestDto;
-import com.lms_backend.lms_project.dto.request.AddCourseSectionTopicRequest;
-import com.lms_backend.lms_project.dto.request.RatingRequest;
+import com.lms_backend.lms_project.dto.request.*;
+import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
 import com.lms_backend.lms_project.dto.response.RatingListResponse;
 import com.lms_backend.lms_project.dto.response.RatingResponse;
+import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.resource.CourseResource;
 import com.lms_backend.lms_project.service.CourseProgressService;
 import com.lms_backend.lms_project.service.RatingService;
@@ -25,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/course")
@@ -49,6 +51,12 @@ public class CourseController {
         return this.courseResource.addCourse(request);
     }
 
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Api to update category")
+    public ResponseEntity<CommonApiResponse> updateCategory(@PathVariable("id") int id, @ModelAttribute CourseDTO request) {
+        return courseResource.updateCourse(id, request);
+    }
+
     @PostMapping("section/add")
     @Operation(summary = "Api to add the course section")
     public ResponseEntity<CourseResponseDto> addCourseSection(@RequestBody AddCourseSectionRequestDto request) {
@@ -67,6 +75,7 @@ public class CourseController {
                                                                   @RequestParam("status") String status, @RequestParam("videoShow") String videoShow) {
         return courseResource.fetchCoursesByMentor(mentorId, status, videoShow);
     }
+
     @GetMapping("/fetch/course-id")
     @Operation(summary = "Api to fetch course by using course id")
     public ResponseEntity<CourseResponseDto> fetchCourseById(@RequestParam("courseId") Integer courseId,
@@ -84,19 +93,6 @@ public class CourseController {
     public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(@RequestParam("status") String status,
                                                                   @RequestParam("videoShow") String videoShow) {
         return courseResource.fetchCoursesByStatus(status, videoShow);
-    }
-
-    @GetMapping("/ratings/{courseId}")
-    public ResponseEntity<RatingListResponse> getRatingsByCourse(
-            @PathVariable int courseId) {
-        return ResponseEntity.ok(ratingService.fetchRatingsByCourse(courseId));
-    }
-
-    @PostMapping("/rating/add")
-    public ResponseEntity<RatingResponse> addRating(
-            @Valid @RequestBody RatingRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ratingService.addRating(request));
     }
 
     @GetMapping(value = "/video/{courseSectionTopicVideoFileName}", produces = "video/*")
@@ -130,4 +126,13 @@ public class CourseController {
                                                   HttpServletResponse response) throws DocumentException, IOException {
         return this.courseResource.downloadNotes(notesFileName, response);
     }
+
+    @GetMapping("/fetch/name-wise")
+    @Operation(summary = "Api to fetch courses by using name")
+    public ResponseEntity<CourseResponseDto> fetchCoursesByName(@RequestParam("courseName") String courseName) {
+        return courseResource.fetchCoursesByName(courseName);
+    }
+
+
+
 }

@@ -1,8 +1,10 @@
 package com.lms_backend.lms_project.service;
 
+import com.lms_backend.lms_project.entity.ConfirmationToken;
 import com.lms_backend.lms_project.entity.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
     User addUser(User user);
@@ -29,5 +31,6 @@ public interface UserService {
 
     List<User> getAllMentors();
     List<User> getAllUser();
-
+    User findByEmail(String email);
+    Optional<User> verifyResetPasswordToken(String token);
 }

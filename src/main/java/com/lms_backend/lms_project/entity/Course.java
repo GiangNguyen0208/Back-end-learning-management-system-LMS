@@ -6,10 +6,16 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Course {
 
     @Id
@@ -44,6 +50,8 @@ public class Course {
     private int discountInPercent;
 
     private int quantityStudent;
+
+    private int totalRating;
 
     @Column(columnDefinition = "LONGTEXT")
     private String authorCourseNote;
