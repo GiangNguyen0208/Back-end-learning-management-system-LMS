@@ -1,5 +1,7 @@
 package com.lms_backend.lms_project.Utility;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -7,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+@JsonIgnoreProperties({"inputStream", "bytes"})
 public class CustomMultipartFile implements MultipartFile {
     private final File file;
 

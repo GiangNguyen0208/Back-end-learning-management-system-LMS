@@ -23,6 +23,8 @@ public class ConfirmationTokenService {
                 token, LocalDateTime.now());
     }
 
+
+
     public void save(ConfirmationToken confirmationToken) {
         dao.save(confirmationToken);
     }

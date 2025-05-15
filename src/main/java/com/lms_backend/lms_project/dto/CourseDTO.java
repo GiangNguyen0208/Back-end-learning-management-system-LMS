@@ -25,8 +25,8 @@ public class CourseDTO {
     private String authorCourseNote;
     private String specialNote;
     private String prerequisite;
-    private MultipartFile notesFileName;
-    private MultipartFile thumbnail;
+    private String notesFileName;
+    private String thumbnail;
 
     // Mentor info
     private int mentorId;

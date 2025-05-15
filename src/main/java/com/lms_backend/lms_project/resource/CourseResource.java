@@ -460,8 +460,8 @@ public class CourseResource {
                 .type(course.getType())
                 .fee(course.getFee())
                 .addedDateTime(course.getAddedDateTime())
-                .notesFileName(fileNoteMultipart)
-                .thumbnail(fileThumbnailMultipart)
+                .notesFileName(course.getNotesFileName())
+                .thumbnail(course.getThumbnail())
                 .status(course.getStatus())
                 .totalRating(course.getTotalRating())
                 .discountInPercent(course.getDiscountInPercent())
@@ -727,17 +727,19 @@ public class CourseResource {
         }
 
         // Chỉ lưu file mới nếu có thay đổi
+        MultipartFile noteFile = storageService.getCourseNoteAndThumbnailAsMultipartFile(request.getNotesFileName());
+        MultipartFile thumbnailFile = storageService.getCourseNoteAndThumbnailAsMultipartFile(request.getThumbnail());
         String courseNote = null;
         String thumbnailFilename = null;
 
         if (request.getNotesFileName() != null && !request.getNotesFileName().isEmpty()) {
-            courseNote = this.storageService.storeCourseNote(request.getNotesFileName());
+            courseNote = this.storageService.storeCourseNote(noteFile);
         } else {
             courseNote = course.getNotesFileName(); // Giữ lại file cũ nếu không có file mới
         }
 
         if (request.getThumbnail() != null && !request.getThumbnail().isEmpty()) {
-            thumbnailFilename = this.storageService.storeCourseNote(request.getThumbnail());
+            thumbnailFilename = this.storageService.storeCourseNote(thumbnailFile);
         } else {
             thumbnailFilename = course.getThumbnail(); // Giữ lại thumbnail cũ nếu không có thumbnail mới
         }
@@ -795,6 +797,7 @@ public class CourseResource {
         response.setSuccess(true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
 
 

@@ -6,6 +6,8 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -142,13 +144,19 @@ public class BookingResource {
         for (Integer courseId : request.getCourseIds()) {
             Course course = this.courseService.getById(courseId);
 
+            // Calculate fee original
+            BigDecimal fee = course.getFee();
+            BigDecimal discountPercent = BigDecimal.valueOf(course.getDiscountInPercent());
+            BigDecimal discountAmount = fee.multiply(discountPercent).divide(BigDecimal.valueOf(100));
+            BigDecimal feeOriginal = fee.subtract(discountAmount);
+
             String bookingId = Helper.generateTourBookingId();
             String paymentBookingId = Helper.generateBookingPaymentId();
 
             Payment payment = new Payment();
             payment.setCardNo(request.getCardNo());
             payment.setBookingId(bookingId);
-            payment.setAmount(course.getFee());
+            payment.setAmount(feeOriginal);
             payment.setCustomer(customer);
             payment.setCvv(request.getCvv());
             payment.setExpiryDate(request.getExpiryDate());
@@ -442,5 +450,25 @@ public class BookingResource {
                 .avatar(user.getAvatar())
                 .build();
     }
+
+    public List<User> fetchStudentByCourse(int courseId) {
+        LOG.info("Request list student by course ID: " + courseId);
+
+        if (courseId == 0) {
+            LOG.warn("Course ID is missing or invalid");
+            return Collections.emptyList();  // trả về danh sách rỗng thay vì ResponseEntity
+        }
+
+        List<User> studentsByCourse = bookingService.fetchStudentsByCourse(courseId);
+
+        if (studentsByCourse == null) {
+            return Collections.emptyList();
+        }
+
+        return studentsByCourse;
+    }
+
+
+
 }
 

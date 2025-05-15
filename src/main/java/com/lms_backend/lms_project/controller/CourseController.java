@@ -9,6 +9,7 @@ import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
 import com.lms_backend.lms_project.dto.response.RatingListResponse;
 import com.lms_backend.lms_project.dto.response.RatingResponse;
+import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.resource.CourseResource;
 import com.lms_backend.lms_project.service.CourseProgressService;
 import com.lms_backend.lms_project.service.RatingService;
@@ -94,8 +95,6 @@ public class CourseController {
         return courseResource.fetchCoursesByStatus(status, videoShow);
     }
 
-
-
     @GetMapping(value = "/video/{courseSectionTopicVideoFileName}", produces = "video/*")
     public void fetchCourseTopicVideo(
             @PathVariable("courseSectionTopicVideoFileName") String courseSectionTopicVideoFileName,
@@ -133,5 +132,7 @@ public class CourseController {
     public ResponseEntity<CourseResponseDto> fetchCoursesByName(@RequestParam("courseName") String courseName) {
         return courseResource.fetchCoursesByName(courseName);
     }
+
+
 
 }

@@ -3,6 +3,7 @@ package com.lms_backend.lms_project.service;
 
 import java.util.List;
 
+import com.lms_backend.lms_project.entity.User;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,5 +35,7 @@ public interface StorageService {
     Resource loadCourseNote(String fileName);
 
     void deleteCourseNote(String fileName);
+
+    MultipartFile getCourseNoteAndThumbnailAsMultipartFile(String fileName);
 
 }

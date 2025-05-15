@@ -12,6 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
+
 @SpringBootApplication
 public class LmsProjectApplication implements CommandLineRunner {
 
@@ -36,9 +38,11 @@ public class LmsProjectApplication implements CommandLineRunner {
 		if (admin == null) {
 
 			LOG.info("Admin not found in system, so adding default admin");
-
+			LocalDateTime now = LocalDateTime.now();
 			User user = new User();
 			user.setUsername("admin");
+			user.setPhoneNo("0948188712");
+			user.setCreatedAt(now);
 			user.setEmailId("demo.admin@demo.com");
 			user.setPassword(passwordEncoder.encode("admin123"));
 			user.setRole(Constant.UserRole.ROLE_ADMIN.value());

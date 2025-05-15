@@ -9,6 +9,7 @@ import com.lms_backend.lms_project.dto.request.BookingRequestDTO;
 import com.lms_backend.lms_project.dto.response.BookingResponseDTO;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
+import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.resource.BookingResource;
 import com.lms_backend.lms_project.resource.CourseResource;
 import com.lms_backend.lms_project.service.EmailService;
@@ -107,6 +108,12 @@ public class BookingController {
 
         List<UserDTO> students = bookingResource.getStudentsByCourseAndMentor(mentorId, courseId);
         return ResponseEntity.ok(students);
+    }
+
+    @GetMapping("/fetch/student-by-course/{courseId}")
+    @Operation(summary = "Api to fetch courses by using name")
+    public List<User> fetchStudentByCourse(@PathVariable("courseId") int courseId) {
+        return bookingResource.fetchStudentByCourse(courseId);
     }
 }
 

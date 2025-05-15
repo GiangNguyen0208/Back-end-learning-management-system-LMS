@@ -35,5 +35,9 @@ public interface BookingDAO  extends JpaRepository<Booking, Integer> {
     @Query("SELECT b FROM Booking b WHERE b.course.id = :courseId AND b.course.mentor.id = :mentorId AND b.status = 'Confirmed'")
     List<Booking> findStudentsByCourseAndMentor(@Param("courseId") int courseId, @Param("mentorId") int mentorId);
 
+    @Query("SELECT b.customer FROM Booking b WHERE b.course.id = :courseId AND b.status = 'Confirmed'")
+    List<User> findStudentsByCourseId(@Param("courseId") Integer courseId);
+
+
 }
 
