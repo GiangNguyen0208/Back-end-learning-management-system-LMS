@@ -15,6 +15,8 @@ public interface UserService {
 
     User getUserByEmailAndStatus(String emailId, String status);
 
+    User getUserByUsernameAndStatus(String username, String status);
+
     User getUserByEmailid(String emailId);
 
     List<User> getUserByRole(String role);

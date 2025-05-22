@@ -9,5 +9,6 @@ import java.util.List;
 
 @Data
 public class UserResponseDTO extends CommonApiResponse {
+    private User user;
     private List<User> users = new ArrayList<>();
 }

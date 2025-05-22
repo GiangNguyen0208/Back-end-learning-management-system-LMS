@@ -2,6 +2,9 @@ package com.lms_backend.lms_project.config;
 
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.filter.JwtAuthFilter;
+import com.lms_backend.lms_project.serviceimpl.CustomOAuth2FailureHandler;
+import com.lms_backend.lms_project.serviceimpl.CustomOAuth2SuccessHandler;
+import com.lms_backend.lms_project.serviceimpl.CustomOAuth2UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +34,15 @@ public class SecurityConfig {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+
+    @Autowired
+    private CustomOAuth2FailureHandler customOAuth2FailureHandler;
+
+    @Autowired
+    private CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
 
     @Bean
     // authentication
@@ -68,6 +80,12 @@ public class SecurityConfig {
                         .hasAnyAuthority(Constant.UserRole.ROLE_ADMIN.value())
 
                         .anyRequest().permitAll())
+
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(customOAuth2SuccessHandler)
+                        .failureHandler(customOAuth2FailureHandler)
+                )
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

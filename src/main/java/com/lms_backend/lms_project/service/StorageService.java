@@ -38,4 +38,7 @@ public interface StorageService {
 
     MultipartFile getCourseNoteAndThumbnailAsMultipartFile(String fileName);
 
+    Resource loadUserImage(String userImageName);
+
+    Resource loadCertificateImage(String certicateImageName);
 }

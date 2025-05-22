@@ -99,6 +99,11 @@ public class UserController {
         this.userResource.fetchUserImage(userImageName, resp);
     }
 
+    @GetMapping(value = "/certificate/{certicateImageName}", produces = "image/*")
+    public void fetchCertificateImage(@PathVariable("certicateImageName") String certicateImageName, HttpServletResponse resp) {
+        this.userResource.fetchCertificateImage(certicateImageName, resp);
+    }
+
     @GetMapping(value = "/users")
     public  ResponseEntity<List<User>> getUsers() {
         List<User> users = userService.getAllUser();
@@ -117,17 +122,19 @@ public class UserController {
         return this.userResource.addMentorDetail(addMentorDetailRequestDto);
     }
 
-//    @GetMapping(value = "/{userImgAvartar}", produces = "image/*")
-//    public void fetchTourAvatar(@PathVariable("userImgAvartar") String userImgAvartar, HttpServletResponse resp) {
-//        this.userResource.fetchUserImage(userImgAvartar, resp);
-//    }
+    @GetMapping(value = "/avatar/{userImgAvartar}", produces = "image/*")
+    public void fetchTourAvatar(@PathVariable("userImgAvartar") String userImgAvartar, HttpServletResponse resp) {
+        this.userResource.fetchUserImage(userImgAvartar, resp);
+    }
+
+
 
     @PostMapping("/{id}/upload-avatar")
-    public ResponseEntity<CommonApiResponse> uploadAvatar(
+    public ResponseEntity<UserResponseDTO> uploadAvatar(
             @PathVariable int id,
             @RequestParam("avatar") MultipartFile file) {
 
-        CommonApiResponse response = new CommonApiResponse();
+        UserResponseDTO response = new UserResponseDTO();
 
         if (file.isEmpty()) {
             response.setResponseMessage("File is empty.");
@@ -136,9 +143,11 @@ public class UserController {
         }
 
         try {
-            userResource.updateUserAvatar(id, file);
+            userResource.updateUserAvatar(id, file); // ✅ cần trả về User sau khi update
+            User updatedUser = userService.getUserById(id);
             response.setResponseMessage("Avatar updated successfully");
             response.setSuccess(true);
+            response.setUser(updatedUser); // ✅ gán user
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.setResponseMessage("Error saving avatar: " + e.getMessage());
@@ -146,7 +155,5 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
-
-
 
 }

@@ -23,6 +23,9 @@ public interface UserDAO extends JpaRepository<User, Integer> {
 
     List<User> findByRoleAndStatus(String role, String status);
 
+    @Query("SELECT u FROM User u WHERE u.status = :status AND u.username = :username")
+    User findByUsernameAndStatus(@Param("username") String username, @Param("status") String status);
+
     @Transactional
     @Modifying
     @Query("UPDATE User a SET a.status = 'Active' WHERE a.emailId = ?1")
@@ -30,5 +33,8 @@ public interface UserDAO extends JpaRepository<User, Integer> {
 
     @Query("SELECT u FROM User u WHERE u.mentorDetail IS NOT NULL AND u.role = 'Mentor'")
     List<User> findAllMentors();
+
+    @Query("SELECT u FROM User u WHERE u.oauth2_id = :oauth2Id")
+    User findByOauth2Id(@Param("oauth2Id") String oauth2Id);
 
 }

@@ -3,6 +3,7 @@ package com.lms_backend.lms_project;
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.service.UserService;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,12 @@ public class LmsProjectApplication implements CommandLineRunner {
 	private PasswordEncoder passwordEncoder;
 
 	public static void main(String[] args) {
+		Dotenv dotenv = Dotenv.load();
+		System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));
+		System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
+		System.setProperty("FACEBOOK_CLIENT_ID", dotenv.get("FACEBOOK_CLIENT_ID"));
+		System.setProperty("FACEBOOK_CLIENT_SECRET", dotenv.get("FACEBOOK_CLIENT_SECRET"));
+
 		SpringApplication.run(LmsProjectApplication.class, args);
 	}
 

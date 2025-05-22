@@ -46,6 +46,8 @@ public class User {
 
     private String oauth2_provider;
 
+    private boolean email_verified;
+
     private String role;
 
     private String avatar;

@@ -150,5 +150,21 @@ public class StorageServiceImpl implements StorageService {
         return new CustomMultipartFile(file);
     }
 
+    @Override
+    public Resource loadUserImage(String userImageName) {
+        File filePath = new File(PROFILE_PIC_BASEPATH, userImageName);
+        if (filePath.exists())
+            return new FileSystemResource(filePath);
+        return null;
+    }
+
+    @Override
+    public Resource loadCertificateImage(String certicateImageName) {
+        File filePath = new File(PROFILE_PIC_BASEPATH, certicateImageName);
+        if (filePath.exists())
+            return new FileSystemResource(filePath);
+        return null;
+    }
+
 }
 

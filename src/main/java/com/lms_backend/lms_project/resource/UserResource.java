@@ -353,7 +353,7 @@ public class UserResource {
     }
 
     public void fetchUserImage(String userImageName, HttpServletResponse resp) {
-        Resource resource = storageService.load(userImageName);
+        Resource resource = storageService.loadUserImage(userImageName);
         if (resource != null) {
             try (InputStream in = resource.getInputStream()) {
                 ServletOutputStream out = resp.getOutputStream();
@@ -363,6 +363,8 @@ public class UserResource {
             }
         }
     }
+
+
 
     public void updateUserAvatar(int userId, MultipartFile avatarFile) {
         LOG.info("Check file avatar: " + avatarFile);
@@ -491,5 +493,17 @@ public class UserResource {
         response.setSuccess(true);
         response.setResponseMessage("Mật khẩu đã được thay đổi thành công.");
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public void fetchCertificateImage(String certicateImageName, HttpServletResponse resp) {
+        Resource resource = storageService.loadCertificateImage(certicateImageName);
+        if (resource != null) {
+            try (InputStream in = resource.getInputStream()) {
+                ServletOutputStream out = resp.getOutputStream();
+                FileCopyUtils.copy(in, out);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
