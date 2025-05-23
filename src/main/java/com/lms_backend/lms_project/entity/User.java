@@ -69,6 +69,10 @@ public class User {
     @JsonIgnore
     private List<Rating> ratings = new ArrayList<>();
 
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<AssignmentSubmission> assignmentSubmissions = new ArrayList<>();
+
     // Thêm phương thức helper
     public void addRating(Rating rating) {
         ratings.add(rating);

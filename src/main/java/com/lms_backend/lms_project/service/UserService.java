@@ -1,7 +1,9 @@
 package com.lms_backend.lms_project.service;
 
+import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.entity.ConfirmationToken;
 import com.lms_backend.lms_project.entity.User;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,4 +37,7 @@ public interface UserService {
     List<User> getAllUser();
     User findByEmail(String email);
     Optional<User> verifyResetPasswordToken(String token);
+
+    User getMentorByID(int mentorID);
+
 }

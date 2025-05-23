@@ -68,10 +68,12 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Collaborator> collabrators = new ArrayList<>();
 
-    // Thêm vào class Course
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Rating> ratings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Assignment> assignments = new ArrayList<>();
 
     // Thêm phương thức helper
     public void addRating(Rating rating) {

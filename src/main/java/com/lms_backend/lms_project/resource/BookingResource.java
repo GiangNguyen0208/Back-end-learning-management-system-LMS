@@ -404,6 +404,19 @@ public class BookingResource {
         booking.setBookingTime(String.valueOf(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
         booking.setAmount(BigDecimal.ZERO); // Miễn phí
 
+        // Cập nhật số học viên của khóa học
+        course.setQuantityStudent(course.getQuantityStudent() + 1);
+
+        User mentor = course.getMentor();
+
+        // Cập nhật tổng số học viên của mentor
+        List<Course> courseRelative = courseService.getByMentorAndStatus(mentor, "Active");
+        int totalStudent = 0;
+        for (Course c : courseRelative) {
+            totalStudent += c.getQuantityStudent();
+        }
+        mentor.getMentorDetail().setQuantityStudent(totalStudent);
+
         Booking savedBooking = bookingService.addBooking(booking);
         if (savedBooking == null) {
             LOG.error("❌ Failed to save booking for customer {} and course {}", customer.getId(), course.getId());

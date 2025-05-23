@@ -31,6 +31,12 @@ public class StorageServiceImpl implements StorageService {
     @Value("${com.lms.course.notes.folder.path}")
     private String COURSE_NOTE_BASEPATH;
 
+    @Value("${com.lms.course.assigments.folder.path}")
+    private String ASSIGNMENT_BASEPATH;
+
+    @Value("${com.lms.profile.submissions.folder.path}")
+    private String ASSIGNMENT_SUBMISSION_BASEPATH;
+
     @Override
     public List<String> loadAll() {
         File dirPath = new File(PROFILE_PIC_BASEPATH);
@@ -163,6 +169,36 @@ public class StorageServiceImpl implements StorageService {
         File filePath = new File(PROFILE_PIC_BASEPATH, certicateImageName);
         if (filePath.exists())
             return new FileSystemResource(filePath);
+        return null;
+    }
+
+    @Override
+    public String storeAssignment(MultipartFile file) {
+        String ext = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
+
+        String fileName = UUID.randomUUID().toString().replaceAll("-", "") + ext;
+        File filePath = new File(ASSIGNMENT_BASEPATH, fileName);
+        try (FileOutputStream out = new FileOutputStream(filePath)) {
+            FileCopyUtils.copy(file.getInputStream(), out);
+            return fileName;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public String storeAssignmentSubmission(MultipartFile file) {
+        String ext = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
+
+        String fileName = UUID.randomUUID().toString().replaceAll("-", "") + ext;
+        File filePath = new File(ASSIGNMENT_SUBMISSION_BASEPATH, fileName);
+        try (FileOutputStream out = new FileOutputStream(filePath)) {
+            FileCopyUtils.copy(file.getInputStream(), out);
+            return fileName;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

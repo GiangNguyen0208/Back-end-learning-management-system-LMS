@@ -41,4 +41,8 @@ public interface StorageService {
     Resource loadUserImage(String userImageName);
 
     Resource loadCertificateImage(String certicateImageName);
+
+    String storeAssignment(MultipartFile assignmentFile);
+
+    String storeAssignmentSubmission(MultipartFile assignmentSubmissionFile);
 }

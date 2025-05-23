@@ -6,6 +6,7 @@ import com.lms_backend.lms_project.dao.UserDAO;
 import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.AddMentorDetailRequestDto;
 import com.lms_backend.lms_project.dto.request.ChangePasswordRequestDTO;
+import com.lms_backend.lms_project.dto.request.UpdateMentorDetailRequest;
 import com.lms_backend.lms_project.dto.request.UserLoginRequest;
 import com.lms_backend.lms_project.dto.response.*;
 import com.lms_backend.lms_project.entity.Category;
@@ -506,4 +507,61 @@ public class UserResource {
             }
         }
     }
+
+    public ResponseEntity<CommonApiResponse> updateMentorDetail(int mentorID, UpdateMentorDetailRequest request) {
+        LOG.info("🔒 Received request for update mentorDetail: {}", mentorID);
+        CommonApiResponse response = new CommonApiResponse();
+
+        if (mentorID == 0) {
+            response.setResponseMessage("ID is missing !");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        User mentorUpdate = userDAO.getMentorByID(mentorID);
+
+        if (mentorUpdate == null) {
+            response.setResponseMessage("Mentor not exist !");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
+        if (request == null) {
+            response.setResponseMessage("Update Info is missing !");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        MentorDetail mentorDetail = mentorUpdate.getMentorDetail();
+        if (mentorDetail == null) {
+            mentorDetail = new MentorDetail(); // hoặc throw exception nếu bạn muốn bắt buộc mentor phải có mentorDetail
+        }
+
+        mentorDetail.setAge(request.getAge());
+        mentorDetail.setBio(request.getBio());
+        mentorDetail.setProfession(request.getProfession());
+        mentorDetail.setDegreeLevel(request.getDegreeLevel());
+        mentorDetail.setExperience(request.getExperience());
+        mentorDetail.setHighestQualification(request.getHighestQualification());
+        mentorDetail.setLanguageCertificate(request.getLanguageCertificate());
+        mentorDetail.setQuantityStudent(mentorDetail.getQuantityStudent());
+        mentorDetail.setQuantityCourse(mentorDetail.getQuantityCourse());
+
+        if (request.getProfilePic() != null) {
+            mentorDetail.setProfilePic(storageService.store(request.getProfilePic()));
+        }
+        if (request.getSelectedCertificate() != null) {
+            mentorDetail.setSelectedCertificate(storageService.store(request.getSelectedCertificate()));
+        }
+
+        MentorDetail updatedMentorDetail = mentorDetailService.updateMentorDetail(mentorDetail);
+        mentorUpdate.setMentorDetail(updatedMentorDetail);
+        mentorUpdate.setUpdateAt(LocalDateTime.now());
+        userService.updateUser(mentorUpdate);
+
+        response.setResponseMessage("Mentor profile updated successfully!");
+        response.setSuccess(true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

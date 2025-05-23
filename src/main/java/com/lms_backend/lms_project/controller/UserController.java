@@ -3,6 +3,7 @@ package com.lms_backend.lms_project.controller;
 import com.lms_backend.lms_project.dto.UserDTO;
 import com.lms_backend.lms_project.dto.request.AddMentorDetailRequestDto;
 import com.lms_backend.lms_project.dto.request.ChangePasswordRequestDTO;
+import com.lms_backend.lms_project.dto.request.UpdateMentorDetailRequest;
 import com.lms_backend.lms_project.dto.request.UserLoginRequest;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.RegisterUserRequestDTO;
@@ -116,6 +117,17 @@ public class UserController {
         return ResponseEntity.ok(mentors);
     }
 
+    @GetMapping(value = "/mentor/{mentorID}")
+    public ResponseEntity<User> getMentorByID(@PathVariable("mentorID") int mentorID) {
+        User mentors = userService.getMentorByID(mentorID);
+        return ResponseEntity.ok(mentors);
+    }
+
+    @PutMapping(value = "/mentor/update/{mentorID}")
+    public ResponseEntity<CommonApiResponse> updateMentorDetail(@PathVariable("mentorID") int mentorID, @ModelAttribute UpdateMentorDetailRequest request) {
+        return userResource.updateMentorDetail(mentorID, request);
+    }
+
     @PutMapping("/mentor/detail/update")
     @Operation(summary = "Api to update the mentor detail")
     public ResponseEntity<CommonApiResponse> addMentorDetail(AddMentorDetailRequestDto addMentorDetailRequestDto) {
@@ -126,8 +138,6 @@ public class UserController {
     public void fetchTourAvatar(@PathVariable("userImgAvartar") String userImgAvartar, HttpServletResponse resp) {
         this.userResource.fetchUserImage(userImgAvartar, resp);
     }
-
-
 
     @PostMapping("/{id}/upload-avatar")
     public ResponseEntity<UserResponseDTO> uploadAvatar(

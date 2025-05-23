@@ -2,10 +2,12 @@ package com.lms_backend.lms_project.serviceimpl;
 
 import com.lms_backend.lms_project.dao.RatingDAO;
 import com.lms_backend.lms_project.dao.UserDAO;
+import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.entity.ConfirmationToken;
 import com.lms_backend.lms_project.entity.User;
 import com.lms_backend.lms_project.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -135,4 +137,10 @@ public class UserServiceImpl implements UserService {
 
         return Optional.of(confirmationToken.getUser());
     }
+
+    @Override
+    public User getMentorByID(int mentorID) {
+        return userDao.getMentorByID(mentorID);
+    }
+
 }

@@ -37,4 +37,6 @@ public interface UserDAO extends JpaRepository<User, Integer> {
     @Query("SELECT u FROM User u WHERE u.oauth2_id = :oauth2Id")
     User findByOauth2Id(@Param("oauth2Id") String oauth2Id);
 
+    @Query("SELECT u FROM User u WHERE u.role = 'Mentor' AND u.id = :mentorID AND u.status = 'Active'")
+    User getMentorByID(@Param("mentorID") int mentorID);
 }

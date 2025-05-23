@@ -84,4 +84,18 @@ public class Constant {
             return this.type;
         }
     }
+
+    public enum GradingType {
+        PENDING("Pending"), GRADED("Graded");
+
+        private String type;
+
+        private GradingType(String type) {
+            this.type = type;
+        }
+
+        public String value() {
+            return this.type;
+        }
+    }
 }
