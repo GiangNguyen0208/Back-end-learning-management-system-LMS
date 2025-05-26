@@ -10,11 +10,16 @@ import com.lms_backend.lms_project.resource.AssignmentSubmissionResource;
 import com.lms_backend.lms_project.service.AssignmentSubmissionService;
 import com.lms_backend.lms_project.service.AssignmentService;
 import com.lms_backend.lms_project.service.UserService;
+import com.lowagie.text.DocumentException;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -42,11 +47,14 @@ public class AssignmentSubmissionController {
 
     // Mentor lấy danh sách bài chờ chấm theo assignmentId (GET /api/assignment-submissions/pending?assignmentId=xxx)
     @GetMapping("/pending")
-    public ResponseEntity<List<AssignmentSubmission>> getPendingSubmissions(@RequestParam int assignmentId) {
-        Assignment assignment = assignmentService.findById(assignmentId)
-                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+    public ResponseEntity<List<AssignmentSubmission>> getPendingSubmissions(@RequestParam("assignmentId") int assignmentId) {
+        List<AssignmentSubmission> submissions = submissionService.getPendingSubmissionsByAssignment(assignmentId);
+        return ResponseEntity.ok(submissions);
+    }
 
-        List<AssignmentSubmission> submissions = submissionService.getPendingSubmissionsByAssignment(assignment);
+    @GetMapping("/graded/byAssignment")
+    public ResponseEntity<List<AssignmentSubmission>> getGradedSubmissions(@RequestParam("assignmentId") int assignmentId) {
+        List<AssignmentSubmission> submissions = submissionService.getGradedSubmissionsByAssignment(assignmentId);
         return ResponseEntity.ok(submissions);
     }
 
@@ -54,11 +62,17 @@ public class AssignmentSubmissionController {
     @PutMapping("/grade/{submissionId}")
     public ResponseEntity<?> gradeSubmission(
             @PathVariable int submissionId,
-            @RequestParam Double score,
-            @RequestParam(required = false) String feedback
+            @RequestBody SubmitAssignmentDTO request
     ) {
-        AssignmentSubmission gradedSubmission = submissionService.gradeSubmission(submissionId, score, feedback);
+        AssignmentSubmission gradedSubmission = submissionService.gradeSubmission(submissionId, request);
         return ResponseEntity.ok(gradedSubmission);
+    }
+
+    @GetMapping("/graded/byStudent")
+    public ResponseEntity<SubmitAssignmentResponse> getSubmissionsGradedByStudent(
+            @RequestParam("studentId") int studentId
+    ) {
+        return assignmentSubmissionResource.getSubmissionsGradedByStudent(studentId);
     }
 }
 

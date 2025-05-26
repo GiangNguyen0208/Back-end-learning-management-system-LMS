@@ -3,6 +3,7 @@ package com.lms_backend.lms_project.serviceimpl;
 import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.dao.AssignmentDAO;
 import com.lms_backend.lms_project.dao.AssignmentSubmissionDAO;
+import com.lms_backend.lms_project.dto.SubmitAssignmentDTO;
 import com.lms_backend.lms_project.entity.Assignment;
 import com.lms_backend.lms_project.entity.AssignmentSubmission;
 import com.lms_backend.lms_project.entity.User;
@@ -32,19 +33,19 @@ public class AssignmentSubmissionServiceImpl implements AssignmentSubmissionServ
     }
 
     @Override
-    public List<AssignmentSubmission> getPendingSubmissionsByAssignment(Assignment assignment) {
-        return assignmentSubmissionDAO.findByAssignmentAndStatus(assignment, Constant.GradingType.PENDING.value());
+    public List<AssignmentSubmission> getPendingSubmissionsByAssignment(int assignmentId) {
+        return assignmentSubmissionDAO.findAllByAssignmentIdAndStatus(assignmentId, Constant.GradingType.PENDING.value());
     }
 
     @Override
-    public AssignmentSubmission gradeSubmission(int submissionId, Double score, String feedback) {
+    public AssignmentSubmission gradeSubmission(int submissionId, SubmitAssignmentDTO request) {
         Optional<AssignmentSubmission> optional = assignmentSubmissionDAO.findById(submissionId);
         if (optional.isEmpty()) {
             throw new RuntimeException("Submission not found");
         }
         AssignmentSubmission submission = optional.get();
-        submission.setScore(score);
-        submission.setFeedback(feedback);
+        submission.setScore(request.getScore());
+        submission.setFeedback(request.getFeedback());
         submission.setStatus(Constant.GradingType.GRADED.value());
         submission.setUpdateAt(LocalDateTime.now());
         return assignmentSubmissionDAO.save(submission);
@@ -63,5 +64,15 @@ public class AssignmentSubmissionServiceImpl implements AssignmentSubmissionServ
     @Override
     public Optional<AssignmentSubmission> findByStudentAndAssignment(User student, Assignment assignment) {
         return assignmentSubmissionDAO.findByStudentAndAssignment(student, assignment);
+    }
+
+    @Override
+    public List<AssignmentSubmission> getGradedSubmissionsByAssignment(int assignmentId) {
+        return assignmentSubmissionDAO.findAllByAssignmentIdAndStatus(assignmentId, Constant.GradingType.GRADED.value());
+    }
+
+    @Override
+    public List<AssignmentSubmission> getGradedSubmissionsByStudentID(int studentId, String status) {
+        return assignmentSubmissionDAO.findAllSubmissionsByGradedAndStudentID(studentId, status);
     }
 }

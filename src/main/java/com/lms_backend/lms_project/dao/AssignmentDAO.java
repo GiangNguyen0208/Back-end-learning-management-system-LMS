@@ -1,6 +1,7 @@
 package com.lms_backend.lms_project.dao;
 
 import com.lms_backend.lms_project.entity.Assignment;
+import com.lms_backend.lms_project.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

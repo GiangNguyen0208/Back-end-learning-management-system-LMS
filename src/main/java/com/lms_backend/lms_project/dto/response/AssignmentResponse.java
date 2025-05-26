@@ -1,6 +1,7 @@
 package com.lms_backend.lms_project.dto.response;
 
 import com.lms_backend.lms_project.dto.AssignmentDTO;
+import com.lms_backend.lms_project.dto.SubmitAssignmentDTO;
 import com.lms_backend.lms_project.entity.Assignment;
 import lombok.Data;
 
@@ -14,4 +15,6 @@ public class AssignmentResponse extends CommonApiResponse {
     private Assignment assignment;
 
     private List<AssignmentDTO> assignmentDTOS;
+
+
 }

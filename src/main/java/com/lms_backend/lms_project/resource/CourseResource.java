@@ -798,8 +798,6 @@ public class CourseResource {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
-
 //    public ResponseEntity<CourseResponseDto> fetchCoursesByStatus(String status, String videoShow) {
 //
 //        LOG.info("received request for fetching the courses by status");

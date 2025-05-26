@@ -2,6 +2,7 @@ package com.lms_backend.lms_project.resource;
 
 import com.lms_backend.lms_project.dto.AssignmentDTO;
 import com.lms_backend.lms_project.dto.CourseDTO;
+import com.lms_backend.lms_project.dto.SubmitAssignmentDTO;
 import com.lms_backend.lms_project.dto.response.AssignmentResponse;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.CourseResponseDto;
@@ -20,10 +21,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 

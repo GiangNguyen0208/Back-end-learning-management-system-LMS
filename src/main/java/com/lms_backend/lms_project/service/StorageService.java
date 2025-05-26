@@ -38,6 +38,8 @@ public interface StorageService {
 
     MultipartFile getCourseNoteAndThumbnailAsMultipartFile(String fileName);
 
+    MultipartFile getAssignmentAsMultipartFile(String fileName);
+
     Resource loadUserImage(String userImageName);
 
     Resource loadCertificateImage(String certicateImageName);
@@ -45,4 +47,6 @@ public interface StorageService {
     String storeAssignment(MultipartFile assignmentFile);
 
     String storeAssignmentSubmission(MultipartFile assignmentSubmissionFile);
+
+    MultipartFile getSubmissionAsignmentAsMultipartFile(String submissionFile);
 }

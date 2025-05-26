@@ -157,6 +157,18 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    public MultipartFile getAssignmentAsMultipartFile(String fileName) {
+        File file = new File(ASSIGNMENT_BASEPATH + "/" + fileName);
+        return new CustomMultipartFile(file);
+    }
+
+    @Override
+    public MultipartFile getSubmissionAsignmentAsMultipartFile(String fileName) {
+        File file = new File(ASSIGNMENT_SUBMISSION_BASEPATH + "/" + fileName);
+        return new CustomMultipartFile(file);
+    }
+
+    @Override
     public Resource loadUserImage(String userImageName) {
         File filePath = new File(PROFILE_PIC_BASEPATH, userImageName);
         if (filePath.exists())
@@ -201,6 +213,8 @@ public class StorageServiceImpl implements StorageService {
         }
         return null;
     }
+
+
 
 }
 

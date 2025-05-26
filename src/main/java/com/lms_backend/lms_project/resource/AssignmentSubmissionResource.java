@@ -1,5 +1,6 @@
 package com.lms_backend.lms_project.resource;
 
+import com.lms_backend.lms_project.Utility.Constant;
 import com.lms_backend.lms_project.dto.SubmitAssignmentDTO;
 import com.lms_backend.lms_project.dto.response.CommonApiResponse;
 import com.lms_backend.lms_project.dto.response.SubmitAssignmentResponse;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -83,11 +85,35 @@ public class AssignmentSubmissionResource {
             submission = submissionService.submitAssignment(student, assignment, storedFilePath);
             assignment.getSubmissions().add(submission);
         }
-
         response.setSubmissions(assignment.getSubmissions());
         response.setResponseMessage("Submit assignment successful");
         response.setSuccess(true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    public ResponseEntity<SubmitAssignmentResponse> getSubmissionsGradedByStudent(int studentId) {
+        SubmitAssignmentResponse response = new SubmitAssignmentResponse();
+        if (studentId == 0) {
+            response.setSubmissions(null);
+            response.setResponseMessage("Not found Student ID");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
+        User student = userService.getUserById(studentId);
+
+        if (student == null) {
+            response.setSubmissions(null);
+            response.setResponseMessage("Not found Student");
+            response.setSuccess(false);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
+        List<AssignmentSubmission> assignmentSubmissions = submissionService.getGradedSubmissionsByStudentID(studentId, Constant.GradingType.GRADED.value());
+
+        response.setSubmissions(assignmentSubmissions);
+        response.setResponseMessage("Submit assignment successful");
+        response.setSuccess(true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

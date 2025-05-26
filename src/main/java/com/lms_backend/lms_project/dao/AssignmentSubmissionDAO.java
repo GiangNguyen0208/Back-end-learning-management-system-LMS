@@ -14,7 +14,8 @@ import java.util.Optional;
 @Repository
 public interface AssignmentSubmissionDAO extends JpaRepository<AssignmentSubmission, Integer> {
     // Lấy danh sách bài nộp chờ chấm của 1 bài tập
-    List<AssignmentSubmission> findByAssignmentAndStatus(Assignment assignment, String status);
+    @Query("SELECT s FROM AssignmentSubmission s WHERE s.assignment.id = :assignmentId AND s.status = :status")
+    List<AssignmentSubmission> findAllByAssignmentIdAndStatus(int assignmentId, String status);
 
     // Lấy danh sách bài nộp chờ chấm của 1 student
     List<AssignmentSubmission> findByStudentAndStatus(User student, String status);
@@ -24,4 +25,7 @@ public interface AssignmentSubmissionDAO extends JpaRepository<AssignmentSubmiss
 
     @Query("SELECT s FROM AssignmentSubmission s WHERE s.student = :student AND s.assignment = :assignment and s.status = 'Pending'")
     Optional<AssignmentSubmission> findByStudentAndAssignment(@Param("student") User student, @Param("assignment") Assignment assignment);
+
+    @Query("SELECT s FROM AssignmentSubmission s WHERE s.student.id = :studentId and s.status = :status")
+    List<AssignmentSubmission> findAllSubmissionsByGradedAndStudentID(@Param("studentId") int studentId, @Param("status") String status);
 }
