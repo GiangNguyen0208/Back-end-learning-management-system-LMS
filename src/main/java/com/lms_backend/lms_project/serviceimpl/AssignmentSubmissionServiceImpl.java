@@ -67,12 +67,12 @@ public class AssignmentSubmissionServiceImpl implements AssignmentSubmissionServ
     }
 
     @Override
-    public List<AssignmentSubmission> getGradedSubmissionsByAssignment(int assignmentId) {
-        return assignmentSubmissionDAO.findAllByAssignmentIdAndStatus(assignmentId, Constant.GradingType.GRADED.value());
+    public List<AssignmentSubmission> getGradedSubmissionsByAssignment(int assignmentId, int studentId) {
+        return assignmentSubmissionDAO.findAllByAssignmentIdAndStudenIdAndStatus(assignmentId, studentId, Constant.GradingType.GRADED.value());
     }
 
     @Override
-    public List<AssignmentSubmission> getGradedSubmissionsByStudentID(int studentId, String status) {
-        return assignmentSubmissionDAO.findAllSubmissionsByGradedAndStudentID(studentId, status);
+    public List<AssignmentSubmission> getGradedSubmissionsByStudentID(int assignmentId, String status) {
+        return assignmentSubmissionDAO.findAllByAssignmentIdAndStatus(assignmentId, status);
     }
 }

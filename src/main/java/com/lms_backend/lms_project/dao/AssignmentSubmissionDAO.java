@@ -14,8 +14,12 @@ import java.util.Optional;
 @Repository
 public interface AssignmentSubmissionDAO extends JpaRepository<AssignmentSubmission, Integer> {
     // Lấy danh sách bài nộp chờ chấm của 1 bài tập
+    @Query("SELECT s FROM AssignmentSubmission s WHERE s.assignment.id = :assignmentId AND s.student.id = :studentId AND s.status = :status")
+    List<AssignmentSubmission> findAllByAssignmentIdAndStudenIdAndStatus(@Param("assignmentId") int assignmentId, @Param("studentId") int studentId, @Param("status") String status);
+
     @Query("SELECT s FROM AssignmentSubmission s WHERE s.assignment.id = :assignmentId AND s.status = :status")
-    List<AssignmentSubmission> findAllByAssignmentIdAndStatus(int assignmentId, String status);
+    List<AssignmentSubmission> findAllByAssignmentIdAndStatus(@Param("assignmentId") int assignmentId, @Param("status") String status);
+
 
     // Lấy danh sách bài nộp chờ chấm của 1 student
     List<AssignmentSubmission> findByStudentAndStatus(User student, String status);

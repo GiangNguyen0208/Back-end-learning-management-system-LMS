@@ -17,7 +17,7 @@ public interface AssignmentSubmissionService {
     AssignmentSubmission save(AssignmentSubmission submission);
 
     Optional<AssignmentSubmission> findByStudentAndAssignment(User student, Assignment assignment);
-    List<AssignmentSubmission> getGradedSubmissionsByAssignment(int assignmentId);
+    List<AssignmentSubmission> getGradedSubmissionsByAssignment(int assignmentId, int studentId);
 
-    List<AssignmentSubmission> getGradedSubmissionsByStudentID(int studentId, String value);
+    List<AssignmentSubmission> getGradedSubmissionsByStudentID(int studentId, String status);
 }

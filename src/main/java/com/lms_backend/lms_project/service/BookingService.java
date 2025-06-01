@@ -25,5 +25,7 @@ public interface BookingService {
 
     List<Booking> getByCourseAndCustomer(Course course, User customer);
     List<User> fetchStudentsByCourse(int courseId);
+    List<Booking> getBookingsByBookingId(String bookingId);
 
+    List<Booking> getBookingsByCourseAndCustomer(Course course, User customer);
 }

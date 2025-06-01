@@ -53,8 +53,8 @@ public class AssignmentSubmissionController {
     }
 
     @GetMapping("/graded/byAssignment")
-    public ResponseEntity<List<AssignmentSubmission>> getGradedSubmissions(@RequestParam("assignmentId") int assignmentId) {
-        List<AssignmentSubmission> submissions = submissionService.getGradedSubmissionsByAssignment(assignmentId);
+    public ResponseEntity<List<AssignmentSubmission>> getGradedSubmissions(@RequestParam("assignmentId") int assignmentId, @RequestParam("studentId") int studentId) {
+        List<AssignmentSubmission> submissions = submissionService.getGradedSubmissionsByAssignment(assignmentId, studentId);
         return ResponseEntity.ok(submissions);
     }
 

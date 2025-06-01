@@ -43,7 +43,6 @@ public class LmsProjectApplication implements CommandLineRunner {
 				Constant.UserRole.ROLE_ADMIN.value(), Constant.ActiveStatus.ACTIVE.value());
 
 		if (admin == null) {
-
 			LOG.info("Admin not found in system, so adding default admin");
 			LocalDateTime now = LocalDateTime.now();
 			User user = new User();

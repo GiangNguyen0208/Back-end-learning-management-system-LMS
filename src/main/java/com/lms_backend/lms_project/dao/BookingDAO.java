@@ -39,5 +39,8 @@ public interface BookingDAO  extends JpaRepository<Booking, Integer> {
     List<User> findStudentsByCourseId(@Param("courseId") Integer courseId);
 
 
+    List<Booking> findAllByBookingId(String bookingId);
+
+    List<Booking> findAllByCourseAndCustomer(Course course, User customer);
 }
 

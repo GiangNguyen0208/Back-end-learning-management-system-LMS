@@ -81,4 +81,14 @@ public class BookingServiceImpl implements BookingService {
         return bookingDAO.findStudentsByCourseId(courseId);
     }
 
+    @Override
+    public List<Booking> getBookingsByBookingId(String bookingId) {
+        return bookingDAO.findAllByBookingId(bookingId);
+    }
+
+    @Override
+    public List<Booking> getBookingsByCourseAndCustomer(Course course, User customer) {
+        return bookingDAO.findAllByCourseAndCustomer(course, customer);
+    }
+
 }
